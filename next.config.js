@@ -30,22 +30,7 @@ module.exports = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: [
-      process.env.WORDPRESS_API_URL.match(/(?!(w+)\.)\w*(?:\w+\.)+\w+/)[0], // Valid WP Image domain.
-      "0.gravatar.com",
-      "1.gravatar.com",
-      "2.gravatar.com",
-      "secure.gravatar.com",
-      `${process.env.NEXT_PUBLIC_BASE_HOSTNAME}`, // Add the additional domain for remote patterns
-    ],
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: `${process.env.NEXT_PUBLIC_BASE_HOSTNAME}`,
-        port: "",
-        pathname: "/**",
-      },
-    ],
+    unoptimized: true,
   },
   async redirects() {
     return [
