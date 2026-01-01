@@ -1,0 +1,201 @@
+import Footer2 from "@/components/Footer2";
+import Miniheader from "@/components/Miniheader";
+import Link from "next/link";
+import React from "react";
+//import { Noto_Serif } from "next/font/google";
+import Head from "next/head";
+import Footer from "@/components/Footer";
+
+//const noto = Noto_Serif({ subsets: ["latin"] });
+
+const Empty_Cart = () => {
+  return (
+    <>
+      <Head>
+        <title>A Decentralized Marketplace for Artists and Artisans</title>
+        <meta
+          property="og:title"
+          content="A Decentralized Marketplace for Artists and Artisans
+"
+        />
+        <meta
+          property="og:description"
+          content="Are you an artist or artisan seeking an alternative and affordable handicraft marketplace to sell your crafts to the global market? Then join our waitlist to gain access to exclusive promotions and be first in line for exciting deals in our upcoming launch!"
+        />
+        <meta
+          name="description"
+          content="Join AFOMA Marketplace - a unique platform for artists and artisans to sell crafts globally. Be first for exclusive deals and promotions."
+        ></meta>
+      </Head>
+      <section>
+        <Miniheader />
+      </section>
+
+      <section>
+        <div className="py-12 md:py-20 xl:py-80">
+          <div className="flex items-center justify-center mb-9">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="126"
+              height="97.894"
+              viewBox="0 0 126 97.894"
+            >
+              <g
+                id="Group_42500"
+                data-name="Group 42500"
+                transform="translate(-125 -171.221)"
+              >
+                <ellipse
+                  id="Ellipse_1020"
+                  data-name="Ellipse 1020"
+                  cx="63"
+                  cy="18.5"
+                  rx="63"
+                  ry="18.5"
+                  transform="translate(125 232.115)"
+                  fill="#ffedd5"
+                  opacity="0.8"
+                />
+                <g
+                  id="_28326655_i4991"
+                  data-name="28326655_i4991"
+                  transform="translate(135.45 171.221)"
+                >
+                  <g
+                    id="Group_42499"
+                    data-name="Group 42499"
+                    transform="translate(0 0)"
+                  >
+                    <g
+                      id="Group_42491"
+                      data-name="Group 42491"
+                      transform="translate(12.57 0.13)"
+                    >
+                      <g id="Group_42490" data-name="Group 42490">
+                        <path
+                          id="Path_59559"
+                          data-name="Path 59559"
+                          d="M680.641,812.067l-32.879,19.555a3.047,3.047,0,0,1-4.176-1.061h0a3.047,3.047,0,0,1,1.061-4.176l32.879-19.555a3.047,3.047,0,0,1,4.176,1.061h0A3.046,3.046,0,0,1,680.641,812.067Z"
+                          transform="translate(-643.157 -806.401)"
+                          fill="#475569"
+                        />
+                      </g>
+                    </g>
+                    <g
+                      id="Group_42493"
+                      data-name="Group 42493"
+                      transform="translate(54)"
+                    >
+                      <g id="Group_42492" data-name="Group 42492">
+                        <path
+                          id="Path_59560"
+                          data-name="Path 59560"
+                          d="M1270.9,810.092l32.8,19.683a3.047,3.047,0,0,0,4.18-1.045h0a3.047,3.047,0,0,0-1.045-4.18l-32.8-19.683a3.047,3.047,0,0,0-4.18,1.045h0A3.047,3.047,0,0,0,1270.9,810.092Z"
+                          transform="translate(-1269.425 -804.433)"
+                          fill="#475569"
+                        />
+                      </g>
+                    </g>
+                    <g
+                      id="Group_42495"
+                      data-name="Group 42495"
+                      transform="translate(7.031 24.613)"
+                    >
+                      <g id="Group_42494" data-name="Group 42494">
+                        <path
+                          id="Path_59561"
+                          data-name="Path 59561"
+                          d="M559.429,1176.49l7.127,49.887a10.686,10.686,0,0,0,10.579,9.175h55.993a10.687,10.687,0,0,0,10.579-9.175l7.127-49.887Zm20.495,48.622a2.716,2.716,0,0,1-3.046-2.352l-3.833-29.814a2.721,2.721,0,1,1,5.4-.694l3.833,29.814A2.721,2.721,0,0,1,579.924,1225.112Zm12.605.016c-.06,0-.119.006-.177.006a2.721,2.721,0,0,1-2.713-2.546l-1.917-29.814a2.721,2.721,0,0,1,5.431-.35l1.917,29.814A2.72,2.72,0,0,1,592.529,1225.128Zm15.324-2.716a2.721,2.721,0,0,1-5.442,0V1192.6a2.721,2.721,0,1,1,5.442,0Zm12.772.175a2.721,2.721,0,0,1-2.713,2.547c-.059,0-.117,0-.177-.006a2.721,2.721,0,0,1-2.541-2.89l1.917-29.814a2.721,2.721,0,1,1,5.431.349Zm16.594-29.641-3.833,29.813a2.721,2.721,0,1,1-5.4-.694l3.833-29.814a2.721,2.721,0,0,1,5.4.694Z"
+                          transform="translate(-559.429 -1176.49)"
+                          fill="#1F628E"
+                          opacity="0.87"
+                        />
+                      </g>
+                    </g>
+                    <g
+                      id="Group_42496"
+                      data-name="Group 42496"
+                      transform="translate(0 17.113)"
+                    >
+                      <path
+                        id="Path_59562"
+                        data-name="Path 59562"
+                        d="M554.625,1074.372h-97.5a3.984,3.984,0,0,1-3.984-3.984v-3.281a3.984,3.984,0,0,1,3.984-3.984h97.5a3.984,3.984,0,0,1,3.984,3.984v3.281A3.984,3.984,0,0,1,554.625,1074.372Z"
+                        transform="translate(-453.142 -1063.122)"
+                        fill="#f16217"
+                      />
+                    </g>
+                    <g
+                      id="Group_42497"
+                      data-name="Group 42497"
+                      transform="translate(12.592 20.166)"
+                    >
+                      <circle
+                        id="Ellipse_1018"
+                        data-name="Ellipse 1018"
+                        cx="2.144"
+                        cy="2.144"
+                        r="2.144"
+                        transform="matrix(0.974, -0.227, 0.227, 0.974, 0, 0.971)"
+                        fill="#304754"
+                      />
+                    </g>
+                    <g
+                      id="Group_42498"
+                      data-name="Group 42498"
+                      transform="translate(87.725 20.169)"
+                    >
+                      <circle
+                        id="Ellipse_1019"
+                        data-name="Ellipse 1019"
+                        cx="2.144"
+                        cy="2.144"
+                        r="2.144"
+                        transform="translate(0 4.172) rotate(-76.714)"
+                        fill="#304754"
+                      />
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </svg>
+          </div>
+          <h1
+            className={`text-blue-950 text-3xl text-center mb-2.5 noto-font`}
+          >
+            Your Cart is Empty
+          </h1>
+          <p className="text-blue-950 text-center text-base font-medium mb-6 md:mb-9">
+            Shop now and add products to your cart!
+          </p>
+          <div className="flex items-center justify-center">
+            <Link href="/" className="  buttonprimary">
+              Continue shopping
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="7.477"
+                height="13.14"
+                viewBox="0 0 7.477 13.14"
+              >
+                <path
+                  id="Down_Arrow_3_"
+                  d="M26.166,46.727a.559.559,0,0,1-.4-.164l-5.606-5.606a.561.561,0,0,1,.793-.793l5.21,5.21,5.21-5.21a.561.561,0,0,1,.793.793l-5.606,5.606a.559.559,0,0,1-.4.164Z"
+                  transform="translate(-39.625 32.764) rotate(-90)"
+                  fill="#fff"
+                  stroke="#fff"
+                  strokeWidth="0.75"
+                />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <Footer />
+      </section>
+    </>
+  );
+};
+
+export default Empty_Cart;

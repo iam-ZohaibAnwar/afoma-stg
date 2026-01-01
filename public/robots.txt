@@ -1,0 +1,12 @@
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
+Disallow: /admin/          # Block a specific directory
+Disallow: /my-account/*          # Block a specific directory
+Disallow: /admin          # Block a specific page
+Disallow: /sign-in          # Block a specific page
+Disallow: /dashboard         # Block a specific page
+Allow: /
+
+Sitemap: https://www.afomamarketplace.com/sitemap.xml

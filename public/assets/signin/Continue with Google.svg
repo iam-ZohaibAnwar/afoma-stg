@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18.607" height="19.04" viewBox="0 0 18.607 19.04">
+  <defs>
+    <clipPath id="clipPath">
+      <path id="Path_3146" data-name="Path 3146" d="M19.845,9.243H10.974v3.678H16.08C15.6,15.258,13.614,16.6,10.974,16.6a5.625,5.625,0,0,1,0-11.251A5.5,5.5,0,0,1,14.479,6.6l2.769-2.769a9.514,9.514,0,1,0-6.274,16.66c4.76,0,9.087-3.462,9.087-9.52A7.9,7.9,0,0,0,19.845,9.243Z" transform="translate(-1.455 -1.455)" fill="#172554"/>
+    </clipPath>
+  </defs>
+  <g id="Continue_with_Google" data-name="Continue with Google" transform="translate(-1.455 -1.455)">
+    <g id="Group_40820" data-name="Group 40820" transform="translate(1.455 1.455)" clipPath="url(#clipPath)">
+      <path id="Path_3145" data-name="Path 3145" d="M0,19.251V8l7.356,5.625Z" transform="translate(-0.865 -4.106)" fill="#172554"/>
+    </g>
+    <g id="Group_40821" data-name="Group 40821" transform="translate(1.455 1.455)" clipPath="url(#clipPath)">
+      <path id="Path_3147" data-name="Path 3147" d="M0,4.76l7.356,5.625,3.029-2.64L20.77,6.058V0H0Z" transform="translate(-0.865 -0.865)" fill="#172554"/>
+    </g>
+    <g id="Group_40822" data-name="Group 40822" transform="translate(1.455 1.455)" clipPath="url(#clipPath)">
+      <path id="Path_3149" data-name="Path 3149" d="M0,16.011,12.982,6.058l3.418.433L20.77,0V20.77H0Z" transform="translate(-0.865 -0.865)" fill="#172554"/>
+    </g>
+    <g id="Group_40823" data-name="Group 40823" transform="translate(1.455 1.455)" clipPath="url(#clipPath)">
+      <path id="Path_3151" data-name="Path 3151" d="M24.6,24.011,11.185,13.625l-1.731-1.3L24.6,8Z" transform="translate(-4.695 -4.106)" fill="#172554"/>
+    </g>
+  </g>
+</svg>
