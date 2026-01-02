@@ -243,7 +243,7 @@ const Shop = ({ cart, pageData, addToCart }) => {
   );
 };
 
-const VALID_CATEGORIES = [
+const VALID_CATEGORIES = new Set([
   "art-and-collectibles",
   "fashion",
   "home-and-living",
@@ -251,7 +251,7 @@ const VALID_CATEGORIES = [
   "personal-care-and-bath-products",
   "stationery-and-paper-goods",
   "toys-and-games",
-];
+]);
 
 const PAGE_DATA_MAP = {
   "art-and-collectibles": {
