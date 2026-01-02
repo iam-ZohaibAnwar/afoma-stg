@@ -1,22 +1,30 @@
-import BestProductsCard from "@/components/BestProductsCard";
-import CategoryCard from "@/components/CategoryCard";
-import DiscountedItemCard from "@/components/DiscountedItemCard";
-import Faqs from "@/components/Faq";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import ReviewCard from "@/components/ReviewCard";
-import FavShopCard from "@/components/ShopCard";
-import { getAllPostsForNewData } from "@/lib/api";
-import axios from "axios";
-import { format, parseISO } from "date-fns";
-//import { Noto_Serif } from "next/font/google";
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { calculateSurcharge } from "@/utils/pricingUtils";
 import useSWR from "swr";
+
+import { getAllPostsForNewData } from "@/lib/api";
+import { calculateSurcharge } from "@/utils/pricingUtils";
+
+// ✅ tree-shake friendly date-fns imports
+import format from "date-fns/format";
+import parseISO from "date-fns/parseISO";
+import axios from "axios";
+
+// ✅ Lazy-load big UI blocks
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: true });
+
+const CategoryCard = dynamic(() => import("@/components/CategoryCard"));
+const BestProductsCard = dynamic(() => import("@/components/BestProductsCard"));
+const DiscountedItemCard = dynamic(() => import("@/components/DiscountedItemCard"));
+const ReviewCard = dynamic(() => import("@/components/ReviewCard"));
+const FavShopCard = dynamic(() => import("@/components/ShopCard"));
+const Faqs = dynamic(() => import("@/components/Faq"));
+
 
 // Fetcher function for SWR
 const fetcher = (url) => axios.create({

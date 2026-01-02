@@ -15,8 +15,10 @@ const ProductCardComponent = ({ data }) => {
   let sellerCountry = data?.seller?.country || "";
   let userCurrency = sellerCountry ? (userInfo?.currency && userInfo?.currencyRate) ? userInfo?.currency : false : false
   data = calculateSurcharge([data])?.[0]
-
-  let { categoryId, subCategoryId } = Router.query;
+  let categoryId = data.Category ? data.Category.slug : "";
+  let subCategoryId = data.SubCategory ? data.SubCategory.slug : "";
+  // let { categoryId, subCategoryId } = Router.query;
+  // console.log("data in product card", Router.query);
   let path = Router.pathname
     .replace("/[categoryId]", "")
     .replace("/[subCategoryId]", "")

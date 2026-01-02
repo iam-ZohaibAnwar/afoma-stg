@@ -210,239 +210,240 @@ const Shop = ({ cart, pageData, addToCart }) => {
   );
 };
 
-export const getServerSideProps = async (context) => {
-  const queries = {
-    fashion: ["for-men", "for-women", "for-kids", "for-unisex"],
-    "jewelry-and-accessories": [
-      "necklaces-and-pendants",
-      "earrings",
-      "bracelets-and-bangles",
-      "rings",
-      "handbags-and-purses",
-      "hats-and-headpieces",
-      "brooches-and-pins",
-    ],
-    "home-and-living": ["handcrafted-decor", "home-decor", "food-and-related"],
-    "toys-and-games": ["toys"],
-    "art-and-collectibles": ["digital-art", "keychains"],
-    "stationery-and-paper-goods": [
-      "notebooks-and-journals",
-      "greeting-cards",
-      "stickers-and-labels",
-    ],
-    "personal-care-and-bath-products": [
-      "handmade-soap",
-      "lotion-and-body-butter",
-      "oils",
-    ],
-  };
+const SUB_CATEGORY_MAP = {
+  fashion: ["for-men", "for-women", "for-kids", "for-unisex"],
+  "jewelry-and-accessories": [
+    "necklaces-and-pendants",
+    "earrings",
+    "bracelets-and-bangles",
+    "rings",
+    "handbags-and-purses",
+    "hats-and-headpieces",
+    "brooches-and-pins",
+  ],
+  "home-and-living": ["handcrafted-decor", "home-decor", "food-and-related"],
+  "toys-and-games": ["toys"],
+  "art-and-collectibles": ["digital-art", "keychains"],
+  "stationery-and-paper-goods": [
+    "notebooks-and-journals",
+    "greeting-cards",
+    "stickers-and-labels",
+  ],
+  "personal-care-and-bath-products": [
+    "handmade-soap",
+    "lotion-and-body-butter",
+    "oils",
+  ],
+};
 
-  const pageDataMap = {
-    fashion: {
-      "for-men": {
-        h1: "Where Craft Meets Confidence",
-        p: "Explore handmade men’s fashion designed by artisans who blend culture, creativity, and confidence.",
-        h2: "Explore Men’s Collections",
-        title: "Handcrafted Men’s Fashion | Artisan Clothing & Accessories | AFOMA",
-        description: "Shop handmade men’s clothing and accessories crafted by skilled artisans. Discover traditional and modern fashion that connects culture with contemporary style.",
-        metaTitle: "Handcrafted Men’s Fashion | Authentic Artisan Styles",
-        metaDescription: "Explore handmade men’s fashion crafted by artisans across Africa and the globe - featuring traditional attire, accessories, and modern designs that celebrate culture and craftsmanship.",
-        ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/men.jpg`,
-        ogImageAlt: "",
-        ogImageUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-men`,
-      },
-      "for-women": {
-        h1: "Bold. Beautiful. Handmade.",
-        p: "Discover handmade women’s fashion that celebrates culture, creativity, and individuality.",
-        h2: "Explore Women’s Collections",
-        title: "Handmade Women’s Fashion | Unique Artisan Styles | AFOMA",
-        description: "Shop unique handmade women’s fashion on AFOMA Marketplace. Discover artisan-crafted dresses, bags, and accessories made with creativity and purpose.",
-        metaTitle: "Handmade Women’s Fashion | AFOMA Marketplace",
-        metaDescription: "Explore artisan-crafted dresses, bags, and accessories that celebrate women’s creativity, culture, and confidence.",
-        ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/women.jpg`,
-        ogImageAlt: "",
-        ogImageUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-women`,
-      },
-      "for-kids": {
-        h1: "Tiny Threads, Big Stories",
-        p: "Explore handmade kidswear crafted with creativity, comfort, and playful design.",
-        h2: "Explore Kids’ Collections",
-        title: "Handcrafted Kids’ Fashion | Cute & Cultural Styles | AFOMA Marketplace",
-        description: "Discover handmade kids’ clothing and accessories crafted by artisans. Unique, colorful, and cultural designs made with care for comfort, play, and tradition.",
-        metaTitle: "Handcrafted Kids’ Fashion | Playful Cultural Styles",
-        metaDescription: "Shop artisan-made kids’ clothing and accessories that celebrate creativity and culture. Handmade with love, comfort, and a touch of heritage.",
-        ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/kids.jpg`,
-        ogImageAlt: "",
-        ogImageUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-kids`,
-      },
-      "for-unisex": {
-        h1: "Style Without Labels",
-        p: "Discover handmade unisex fashion crafted with creativity, inclusivity, and culture.",
-        h2: " Explore Unisex Collections",
-        title: "Handcrafted Unisex Fashion | Gender-Inclusive Styles | AFOMA Marketplace",
-        description: "Shop handmade unisex clothing and accessories crafted by artisans. Versatile, cultural, and sustainable designs made for everyone who values comfort and creativity.",
-        metaTitle: "Handcrafted Unisex Fashion | Artisan-Made for Everyone",
-        metaDescription: "Explore artisan-made unisex fashion and accessories that celebrate individuality and culture. Handmade with purpose, comfort, and timeless design.",
-        ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/unisex.jpg`,
-        ogImageAlt: "",
-        ogImageUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-unisex`,
-      },
+const PAGE_DATA_MAP = {
+  fashion: {
+    "for-men": {
+      h1: "Where Craft Meets Confidence",
+      p: "Explore handmade men’s fashion designed by artisans who blend culture, creativity, and confidence.",
+      h2: "Explore Men’s Collections",
+      title: "Handcrafted Men’s Fashion | Artisan Clothing & Accessories | AFOMA",
+      description: "Shop handmade men’s clothing and accessories crafted by skilled artisans. Discover traditional and modern fashion that connects culture with contemporary style.",
+      metaTitle: "Handcrafted Men’s Fashion | Authentic Artisan Styles",
+      metaDescription: "Explore handmade men’s fashion crafted by artisans across Africa and the globe - featuring traditional attire, accessories, and modern designs that celebrate culture and craftsmanship.",
+      ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/men.jpg`,
+      ogImageAlt: "",
+      ogImageUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-men`,
     },
-    "jewelry-and-accessories": {
-      "necklaces-and-pendants": {
-        title: "Handmade Necklaces & Pendants | Statement Jewelry",
-        metaTitle: "Handmade Necklaces & Pendants | Statement Jewelry",
-        metaDescription:
-          "Shop handmade gemstone and African beaded necklaces. Discover ethical statement jewelry crafted by artisans from around the globe.",
-      },
-      earrings: {
-        title: "Handmade Earrings | Elegant Fashion Designs – AFOMA",
-        metaTitle: "Handmade Earrings | Elegant Fashion Designs – AFOMA",
-        metaDescription:
-          "Explore handmade earrings, including African hoop earrings and ethical stud jewelry. Unique styles crafted for conscious shoppers. Shop today!",
-      },
-      "bracelets-and-bangles": {
-        title: "Bracelets & Bangles | Handcrafted Designs for Every Style",
-        metaTitle: "Bracelets & Bangles | Handcrafted Designs for Every Style",
-        metaDescription:
-          "Discover bracelets and bangles, including handcrafted cuffs, charm bracelets, and timeless designs. Perfect for every style and occasion. Explore now!",
-      },
-      rings: {
-        title: "Rings | Handcrafted Styles for Every Occasion – AFOMA",
-        metaTitle: "Rings | Handcrafted Styles for Every Occasion – AFOMA",
-        metaDescription:
-          "Explore a stunning collection of rings, including handcrafted bands, statement pieces, and timeless designs. Perfect for every style and occasion. Shop now!",
-      },
-      "handbags-and-purses": {
-        title: "Handbags & Purses | Stylish & Handcrafted Designs – AFOMA",
-        metaTitle: "Handbags & Purses | Stylish & Handcrafted Designs – AFOMA",
-        metaDescription:
-          "Shop a unique collection of handbags and purses, featuring handcrafted totes, crossbody bags, and clutches. Stylish designs for every occasion. Explore now!",
-      },
-      "hats-and-headpieces": {
-        title: "Hats & Headpieces | Stylish & Unique Accessories – AFOMA",
-        metaTitle: "Hats & Headpieces | Stylish & Unique Accessories – AFOMA",
-        metaDescription:
-          "Discover unique, handcrafted hats and headpieces from independent makers. Shop a wide selection of custom beanies, fascinators, crowns, and more. Find your perfect piece today!",
-      },
-      "brooches-and-pins": {
-        title:
-          "Elegant Brooches & Pins | Unique Handcrafted Accessories – AFOMA",
-        metaTitle:
-          "Elegant Brooches & Pins | Handcrafted & Stylish Accessories – AFOMA",
-        metaDescription:
-          "Elevate your style with exquisite handcrafted brooches and pins. Explore a curated collection of unique designs, including custom beanies, fascinators, crowns, and more. Shop timeless accessories today!",
-      },
+    "for-women": {
+      h1: "Bold. Beautiful. Handmade.",
+      p: "Discover handmade women’s fashion that celebrates culture, creativity, and individuality.",
+      h2: "Explore Women’s Collections",
+      title: "Handmade Women’s Fashion | Unique Artisan Styles | AFOMA",
+      description: "Shop unique handmade women’s fashion on AFOMA Marketplace. Discover artisan-crafted dresses, bags, and accessories made with creativity and purpose.",
+      metaTitle: "Handmade Women’s Fashion | AFOMA Marketplace",
+      metaDescription: "Explore artisan-crafted dresses, bags, and accessories that celebrate women’s creativity, culture, and confidence.",
+      ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/women.jpg`,
+      ogImageAlt: "",
+      ogImageUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-women`,
     },
-    "home-and-living": {
-      "handcrafted-decor": {
-        title: "Handcrafted Decor | Unique Home Accents – AFOMA",
-        metaTitle: "Handcrafted Decor | Unique Home Accents – AFOMA",
-        metaDescription:
-          "Elevate your space with handcrafted decor, including unique wall art, tabletop accents, and handmade ornaments. Perfect for creating a warm, personalized home.",
-      },
-      "home-decor": {
-        title: "Home Decor | Stylish & Handcrafted Designs – AFOMA",
-        metaTitle: "Home Decor | Stylish & Handcrafted Designs – AFOMA",
-        metaDescription:
-          "Transform your home with unique decor, including handcrafted wall art, elegant accents, and timeless designs. Perfect for every room and personal style.",
-      },
-      "food-and-related": {
-        title: "Food & Related | Explore a World of Flavors | AFOMA",
-        metaTitle: "Food & Related | Explore a World of Flavors | AFOMA",
-        metaDescription:
-          "Discover a culinary journey with our diverse selection of food and related products. Find exotic spices, artisanal snacks, gourmet kitchenware, and more from around the world.",
-      },
+    "for-kids": {
+      h1: "Tiny Threads, Big Stories",
+      p: "Explore handmade kidswear crafted with creativity, comfort, and playful design.",
+      h2: "Explore Kids’ Collections",
+      title: "Handcrafted Kids’ Fashion | Cute & Cultural Styles | AFOMA Marketplace",
+      description: "Discover handmade kids’ clothing and accessories crafted by artisans. Unique, colorful, and cultural designs made with care for comfort, play, and tradition.",
+      metaTitle: "Handcrafted Kids’ Fashion | Playful Cultural Styles",
+      metaDescription: "Shop artisan-made kids’ clothing and accessories that celebrate creativity and culture. Handmade with love, comfort, and a touch of heritage.",
+      ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/kids.jpg`,
+      ogImageAlt: "",
+      ogImageUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-kids`,
     },
-    "toys-and-games": {
-      toys: {
-        title: "Unique & Handcrafted Toys | Shop AFOMA Marketplace",
-        metaTitle: "Unique & Handcrafted Toys | Shop AFOMA Marketplace",
-        metaDescription:
-          "Discover one-of-a-kind, handcrafted toys. Shop for unique wooden toys, plushies, dolls, and more. Find the perfect gift today!",
-      },
+    "for-unisex": {
+      h1: "Style Without Labels",
+      p: "Discover handmade unisex fashion crafted with creativity, inclusivity, and culture.",
+      h2: " Explore Unisex Collections",
+      title: "Handcrafted Unisex Fashion | Gender-Inclusive Styles | AFOMA Marketplace",
+      description: "Shop handmade unisex clothing and accessories crafted by artisans. Versatile, cultural, and sustainable designs made for everyone who values comfort and creativity.",
+      metaTitle: "Handcrafted Unisex Fashion | Artisan-Made for Everyone",
+      metaDescription: "Explore artisan-made unisex fashion and accessories that celebrate individuality and culture. Handmade with purpose, comfort, and timeless design.",
+      ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/unisex.jpg`,
+      ogImageAlt: "",
+      ogImageUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-unisex`,
     },
-    "art-and-collectibles": {
-      "digital-art": {
-        title: "Shop Digital Art at AFOMA | Own Unique Digital Creations",
-        metaTitle: "Shop Digital Art at AFOMA | Own Unique Digital Creations",
-        metaDescription:
-          "Elevate your space with unique digital art. Browse and buy original digital art designs, illustrations, and more. Own a piece of digital art today!",
-      },
-      keychains: {
-        title: "Handcrafted & Personalized Keychains | AFOMA Marketplace",
-        metaTitle: "Handcrafted & Personalized Keychains | AFOMA Marketplace",
-        metaDescription:
-          "Find unique and personalized keychains at AFOMA. Shop leather keychains, resin keychains, engraved keychains, and more from talented artisans.",
-      },
+  },
+  "jewelry-and-accessories": {
+    "necklaces-and-pendants": {
+      title: "Handmade Necklaces & Pendants | Statement Jewelry",
+      metaTitle: "Handmade Necklaces & Pendants | Statement Jewelry",
+      metaDescription:
+        "Shop handmade gemstone and African beaded necklaces. Discover ethical statement jewelry crafted by artisans from around the globe.",
     },
-    "stationery-and-paper-goods": {
-      "notebooks-and-journals": {
-        title: "Notebooks & Journals | Writing, Sketching & More | AFOMA",
-        metaTitle: "Notebooks & Journals | Writing, Sketching & More | AFOMA",
-        metaDescription:
-          "Discover a selection of handmade or customized notebooks, journals, planners and diaries at AFOMA. Perfect for personal use or gifts.",
-      },
-      "greeting-cards": {
-        title: "Handmade Greeting Cards | All Occasions | Shop AFOMA",
-        metaTitle: "Handmade Greeting Cards | All Occasions | Shop AFOMA",
-        metaDescription:
-          "Find the perfect handcrafted greeting card for any occasion. Shop birthday cards, thank you cards, holiday cards, and more.",
-      },
-      "stickers-and-labels": {
-        title: "Labels & Stickers | Custom Designs | AFOMA",
-        metaTitle: "Labels & Stickers | Custom Designs | AFOMA",
-        metaDescription:
-          "Discover a wide variety of custom labels and stickers at AFOMA. Shop personalized decorative stickers, planner stickers, address labels, and more.",
-      },
+    earrings: {
+      title: "Handmade Earrings | Elegant Fashion Designs – AFOMA",
+      metaTitle: "Handmade Earrings | Elegant Fashion Designs – AFOMA",
+      metaDescription:
+        "Explore handmade earrings, including African hoop earrings and ethical stud jewelry. Unique styles crafted for conscious shoppers. Shop today!",
     },
-    "personal-care-and-bath-products": {
-      "handmade-soap": {
-        title: "Handmade Soap | Natural & Organic Soaps | AFOMA",
-        metaTitle: "Handmade Soap | Natural & Organic Soaps | AFOMA",
-        metaDescription:
-          "Browse a collection of moisturizing and exfoliating handmade soaps on AFOMA. Discover soaps for all skin types, made with natural ingredients.",
-      },
-      "lotion-and-body-butter": {
-        title: "Lotion & Body Butter | Natural Skin Care | AFOMA",
-        metaTitle: "Lotion & Body Butter | Natural Skin Care | AFOMA",
-        metaDescription:
-          "Browse a collection of shea butter body butters, natural lotions, and other moisturizing skincare. Discover products for dry skin, sensitive skin, and more.",
-      },
-      oils: {
-        title: "Oils | Essential, Carrier & More | AFOMA",
-        metaTitle: "Oils | Essential, Carrier & More | AFOMA",
-        metaDescription:
-          "Discover a variety of natural oils at AFOMA. Shop essential oils, carrier oils, massage oils, and more from independent artisans.",
-      },
+    "bracelets-and-bangles": {
+      title: "Bracelets & Bangles | Handcrafted Designs for Every Style",
+      metaTitle: "Bracelets & Bangles | Handcrafted Designs for Every Style",
+      metaDescription:
+        "Discover bracelets and bangles, including handcrafted cuffs, charm bracelets, and timeless designs. Perfect for every style and occasion. Explore now!",
     },
-    default: {
-      title: "",
-      metaTitle: "",
-      metaDescription: "",
+    rings: {
+      title: "Rings | Handcrafted Styles for Every Occasion – AFOMA",
+      metaTitle: "Rings | Handcrafted Styles for Every Occasion – AFOMA",
+      metaDescription:
+        "Explore a stunning collection of rings, including handcrafted bands, statement pieces, and timeless designs. Perfect for every style and occasion. Shop now!",
     },
-  };
+    "handbags-and-purses": {
+      title: "Handbags & Purses | Stylish & Handcrafted Designs – AFOMA",
+      metaTitle: "Handbags & Purses | Stylish & Handcrafted Designs – AFOMA",
+      metaDescription:
+        "Shop a unique collection of handbags and purses, featuring handcrafted totes, crossbody bags, and clutches. Stylish designs for every occasion. Explore now!",
+    },
+    "hats-and-headpieces": {
+      title: "Hats & Headpieces | Stylish & Unique Accessories – AFOMA",
+      metaTitle: "Hats & Headpieces | Stylish & Unique Accessories – AFOMA",
+      metaDescription:
+        "Discover unique, handcrafted hats and headpieces from independent makers. Shop a wide selection of custom beanies, fascinators, crowns, and more. Find your perfect piece today!",
+    },
+    "brooches-and-pins": {
+      title:
+        "Elegant Brooches & Pins | Unique Handcrafted Accessories – AFOMA",
+      metaTitle:
+        "Elegant Brooches & Pins | Handcrafted & Stylish Accessories – AFOMA",
+      metaDescription:
+        "Elevate your style with exquisite handcrafted brooches and pins. Explore a curated collection of unique designs, including custom beanies, fascinators, crowns, and more. Shop timeless accessories today!",
+    },
+  },
+  "home-and-living": {
+    "handcrafted-decor": {
+      title: "Handcrafted Decor | Unique Home Accents – AFOMA",
+      metaTitle: "Handcrafted Decor | Unique Home Accents – AFOMA",
+      metaDescription:
+        "Elevate your space with handcrafted decor, including unique wall art, tabletop accents, and handmade ornaments. Perfect for creating a warm, personalized home.",
+    },
+    "home-decor": {
+      title: "Home Decor | Stylish & Handcrafted Designs – AFOMA",
+      metaTitle: "Home Decor | Stylish & Handcrafted Designs – AFOMA",
+      metaDescription:
+        "Transform your home with unique decor, including handcrafted wall art, elegant accents, and timeless designs. Perfect for every room and personal style.",
+    },
+    "food-and-related": {
+      title: "Food & Related | Explore a World of Flavors | AFOMA",
+      metaTitle: "Food & Related | Explore a World of Flavors | AFOMA",
+      metaDescription:
+        "Discover a culinary journey with our diverse selection of food and related products. Find exotic spices, artisanal snacks, gourmet kitchenware, and more from around the world.",
+    },
+  },
+  "toys-and-games": {
+    toys: {
+      title: "Unique & Handcrafted Toys | Shop AFOMA Marketplace",
+      metaTitle: "Unique & Handcrafted Toys | Shop AFOMA Marketplace",
+      metaDescription:
+        "Discover one-of-a-kind, handcrafted toys. Shop for unique wooden toys, plushies, dolls, and more. Find the perfect gift today!",
+    },
+  },
+  "art-and-collectibles": {
+    "digital-art": {
+      title: "Shop Digital Art at AFOMA | Own Unique Digital Creations",
+      metaTitle: "Shop Digital Art at AFOMA | Own Unique Digital Creations",
+      metaDescription:
+        "Elevate your space with unique digital art. Browse and buy original digital art designs, illustrations, and more. Own a piece of digital art today!",
+    },
+    keychains: {
+      title: "Handcrafted & Personalized Keychains | AFOMA Marketplace",
+      metaTitle: "Handcrafted & Personalized Keychains | AFOMA Marketplace",
+      metaDescription:
+        "Find unique and personalized keychains at AFOMA. Shop leather keychains, resin keychains, engraved keychains, and more from talented artisans.",
+    },
+  },
+  "stationery-and-paper-goods": {
+    "notebooks-and-journals": {
+      title: "Notebooks & Journals | Writing, Sketching & More | AFOMA",
+      metaTitle: "Notebooks & Journals | Writing, Sketching & More | AFOMA",
+      metaDescription:
+        "Discover a selection of handmade or customized notebooks, journals, planners and diaries at AFOMA. Perfect for personal use or gifts.",
+    },
+    "greeting-cards": {
+      title: "Handmade Greeting Cards | All Occasions | Shop AFOMA",
+      metaTitle: "Handmade Greeting Cards | All Occasions | Shop AFOMA",
+      metaDescription:
+        "Find the perfect handcrafted greeting card for any occasion. Shop birthday cards, thank you cards, holiday cards, and more.",
+    },
+    "stickers-and-labels": {
+      title: "Labels & Stickers | Custom Designs | AFOMA",
+      metaTitle: "Labels & Stickers | Custom Designs | AFOMA",
+      metaDescription:
+        "Discover a wide variety of custom labels and stickers at AFOMA. Shop personalized decorative stickers, planner stickers, address labels, and more.",
+    },
+  },
+  "personal-care-and-bath-products": {
+    "handmade-soap": {
+      title: "Handmade Soap | Natural & Organic Soaps | AFOMA",
+      metaTitle: "Handmade Soap | Natural & Organic Soaps | AFOMA",
+      metaDescription:
+        "Browse a collection of moisturizing and exfoliating handmade soaps on AFOMA. Discover soaps for all skin types, made with natural ingredients.",
+    },
+    "lotion-and-body-butter": {
+      title: "Lotion & Body Butter | Natural Skin Care | AFOMA",
+      metaTitle: "Lotion & Body Butter | Natural Skin Care | AFOMA",
+      metaDescription:
+        "Browse a collection of shea butter body butters, natural lotions, and other moisturizing skincare. Discover products for dry skin, sensitive skin, and more.",
+    },
+    oils: {
+      title: "Oils | Essential, Carrier & More | AFOMA",
+      metaTitle: "Oils | Essential, Carrier & More | AFOMA",
+      metaDescription:
+        "Discover a variety of natural oils at AFOMA. Shop essential oils, carrier oils, massage oils, and more from independent artisans.",
+    },
+  },
+  default: {
+    title: "",
+    metaTitle: "",
+    metaDescription: "",
+  },
+};
 
-  if (
-    !context.query?.categoryId ||
-    !queries[context.query?.categoryId]
-  ) {
+export const getServerSideProps = async ({ query }) => {
+  const categoryId = query?.categoryId?.toLowerCase();
+  const subCategoryId = query?.subCategoryId?.toLowerCase();
+
+  if (!categoryId || !SUB_CATEGORY_MAP[categoryId]) {
     return { notFound: true };
   }
 
   if (
-    !context.query?.subCategoryId ||
-    !queries[context.query?.categoryId].includes(
-      context.query?.subCategoryId.toLowerCase()
-    )
+    !subCategoryId ||
+    !SUB_CATEGORY_MAP[categoryId].includes(subCategoryId)
   ) {
     return { notFound: true };
   }
 
   const pageData =
-    pageDataMap[context.query?.categoryId][
-      context.query?.subCategoryId.toLowerCase()
-    ];
+    PAGE_DATA_MAP?.[categoryId]?.[subCategoryId] ||
+    PAGE_DATA_MAP.default;
+
+  if (!pageData) {
+    return { notFound: true };
+  }
 
   return {
     props: { pageData },

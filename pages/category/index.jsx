@@ -1,24 +1,28 @@
-import Faq from "@/components/Faq";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import { getAllCategory, getAllPostsForNewData } from "@/lib/api";
-import {
-  faAngleRight,
-  faSquareCheck,
-} from "@fortawesome/pro-regular-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import axios from "axios";
-//import { Noto_Serif } from "next/font/google";
+import dynamic from "next/dynamic";
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-import Artisions from "@/components/Artisions";
-import { format, parseISO } from "date-fns";
-import Head from "next/head";
+import { getAllCategory, getAllPostsForNewData } from "@/lib/api";
 
-//const noto = Noto_Serif({ subsets: ["latin"] });
+import {
+  faAngleRight,
+  faSquareCheck,
+} from "@fortawesome/pro-regular-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+// ✅ tree-shake date-fns
+import format from "date-fns/format";
+import parseISO from "date-fns/parseISO";
+import axios from "axios";
+
+// ✅ lazy load heavy UI blocks
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"));
+const Faq = dynamic(() => import("@/components/Faq"));
+const Artisions = dynamic(() => import("@/components/Artisions"));
 
 export default function Index({
   allPosts: { edges },
@@ -37,35 +41,16 @@ export default function Index({
   const [products, setProducts] = useState([]);
   const router = useRouter();
 
-  const fetchCategories = () => {
-    return axios
-      .create({
-        headers: {
-          "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-        },
-      })
-      .get(`${process.env.NEXT_PUBLIC_BASE_URL}/categories`);
-  };
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+  headers: {
+    "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+  },
+});
 
-  const fetchSubcategories = () => {
-    return axios
-      .create({
-        headers: {
-          "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-        },
-      })
-      .get(`${process.env.NEXT_PUBLIC_BASE_URL}/sub-categories`);
-  };
-
-  const fetchChildCategories = () => {
-    return axios
-      .create({
-        headers: {
-          "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-        },
-      })
-      .get(`${process.env.NEXT_PUBLIC_BASE_URL}/child-category`);
-  };
+const fetchCategories = () => api.get("/categories");
+const fetchSubcategories = () => api.get("/sub-categories");
+const fetchChildCategories = () => api.get("/child-category");
 
   const getAllCategories = () => {
     setLoading(true);
@@ -1977,18 +1962,44 @@ export default function Index({
 
 export const getStaticProps = async ({ preview = false }) => {
   try {
-    const allPosts = await getAllPostsForNewData(preview);
-    const categoryPosts = await getAllCategory(preview);
+    const allPostsRaw = await getAllPostsForNewData(preview);
+    const categoryPostsRaw = await getAllCategory(preview);
+
+    // ✅ trim blogs (only fields you actually use)
+    const allPosts = {
+      edges: allPostsRaw.edges.map(({ node }) => ({
+        node: {
+          title: node.title,
+          slug: node.slug,
+          date: node.date,
+          excerpt: node.excerpt,
+          featuredImage: node.featuredImage
+            ? {
+                node: {
+                  sourceUrl: node.featuredImage.node.sourceUrl,
+                },
+              }
+            : null,
+        },
+      })),
+    };
+
+    // ✅ trim categories (edges only)
+    const categoryPosts = {
+      edges: categoryPostsRaw.edges,
+    };
 
     return {
-      props: { allPosts, categoryPosts, preview },
+      props: {
+        allPosts,
+        categoryPosts,
+        preview,
+      },
       revalidate: 10,
     };
   } catch (error) {
     console.error("Error in getStaticProps:", error);
-
-    return {
-      props: { error: true },
-    };
+    return { props: { error: true } };
   }
 };
+

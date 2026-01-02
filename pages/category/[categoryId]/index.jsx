@@ -243,477 +243,476 @@ const Shop = ({ cart, pageData, addToCart }) => {
   );
 };
 
-export const getServerSideProps = async (context) => {
-  const queries = [
-    "art-and-collectibles",
-    "fashion",
-    "home-and-living",
-    "jewelry-and-accessories",
-    "personal-care-and-bath-products",
-    "stationery-and-paper-goods",
-    "toys-and-games",
-  ];
-  const pageDataMap = {
-    "art-and-collectibles": {
-      title: "Shop Arts & Collectibles | AFOMA Marketplace",
-      metaTitle: "Shop Arts & Collectibles | AFOMA Marketplace",
-      metaDescription:
+const VALID_CATEGORIES = [
+  "art-and-collectibles",
+  "fashion",
+  "home-and-living",
+  "jewelry-and-accessories",
+  "personal-care-and-bath-products",
+  "stationery-and-paper-goods",
+  "toys-and-games",
+];
+
+const PAGE_DATA_MAP = {
+  "art-and-collectibles": {
+    title: "Shop Arts & Collectibles | AFOMA Marketplace",
+    metaTitle: "Shop Arts & Collectibles | AFOMA Marketplace",
+    metaDescription:
+      "Shop curated arts and collectibles online at AFOMA Marketplace. Discover one-of-a-kind pieces crafted to inspire and enhance your space.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Shop Arts & Collectibles | AFOMA Marketplace",
+      url: "https://afomamarketplace.com/category/art-and-collectibles",
+      headline: "Shop Arts & Collectibles | AFOMA Marketplace",
+      description:
         "Shop curated arts and collectibles online at AFOMA Marketplace. Discover one-of-a-kind pieces crafted to inspire and enhance your space.",
-      jsonLd: {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Shop Arts & Collectibles | AFOMA Marketplace",
-        url: "https://afomamarketplace.com/category/art-and-collectibles",
+      mainEntity: {
+        "@type": "Article",
         headline: "Shop Arts & Collectibles | AFOMA Marketplace",
         description:
-          "Shop curated arts and collectibles online at AFOMA Marketplace. Discover one-of-a-kind pieces crafted to inspire and enhance your space.",
-        mainEntity: {
-          "@type": "Article",
-          headline: "Shop Arts & Collectibles | AFOMA Marketplace",
-          description:
-            "Discover curated arts and collectibles at AFOMA Marketplace. Explore unique pieces that inspire creativity and elevate your collection.",
-          author: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://afomamarketplace.com/assets/logo.png",
-            },
-          },
-          datePublished: "2024-11-22",
-          dateModified: "2024-11-22",
+          "Discover curated arts and collectibles at AFOMA Marketplace. Explore unique pieces that inspire creativity and elevate your collection.",
+        author: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
         },
-        breadcrumb: {
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://afomamarketplace.com/",
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Categories",
-              item: "https://afomamarketplace.com/category",
-            },
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: "Arts and Collectibles",
-              item: "https://afomamarketplace.com/category/art-and-collectibles",
-            },
-          ],
+        publisher: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://afomamarketplace.com/assets/logo.png",
+          },
         },
+        datePublished: "2024-11-22",
+        dateModified: "2024-11-22",
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://afomamarketplace.com/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Categories",
+            item: "https://afomamarketplace.com/category",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: "Arts and Collectibles",
+            item: "https://afomamarketplace.com/category/art-and-collectibles",
+          },
+        ],
       },
     },
-    fashion: {
-      h1: "Made by Hand, Worn with Heart",
-      p: "Explore artisan-made fashion, crafted with culture and care - from Ankara shirts to handwoven shawls",
-      h2: "Shop by Category",
-      title: "Shop Handmade Fashion Online | Ethical Apparel & Accessories – AFOMA",
-      description: "Discover handmade clothing and accessories crafted by global artisans. Ethically sourced, beautifully made, and ready to ship. Shop fashion that empowers",
-      metaTitle: "Handmade Fashion That Empowers | Shop Ethically on AFOMA",
-      metaDescription: "Explore artisan-made clothing and accessories. Ethical, cultural, and crafted to stand out. Shop now on AFOMA Marketplace.",
-      ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/fashion.jpg`,
-      ogImageAlt: "Ethical artisan-made fashion and accessories on AFOMA Marketplace",
-      ogUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion`,
-      subCategory: [
-        {
-          href: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-men`,
-          name: "For Men"
-        },
-        {
-          href: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-women`,
-          name: "For Women"
-        },
-        {
-          href: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-kids`,
-          name: "For Kids"
-        },
-        {
-          href: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-unisex`,
-          name: "For Unisex"
-        }
-      ],
-      jsonLd: {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Shop Handmade Fashion Online | Ethical Apparel & Accessories – AFOMA",
-        url: "https://afomamarketplace.com/category/fashion",
-        headline: "Shop Handmade Fashion Online | Ethical Apparel & Accessories – AFOMA",
+  },
+  fashion: {
+    h1: "Made by Hand, Worn with Heart",
+    p: "Explore artisan-made fashion, crafted with culture and care - from Ankara shirts to handwoven shawls",
+    h2: "Shop by Category",
+    title: "Shop Handmade Fashion Online | Ethical Apparel & Accessories – AFOMA",
+    description: "Discover handmade clothing and accessories crafted by global artisans. Ethically sourced, beautifully made, and ready to ship. Shop fashion that empowers",
+    metaTitle: "Handmade Fashion That Empowers | Shop Ethically on AFOMA",
+    metaDescription: "Explore artisan-made clothing and accessories. Ethical, cultural, and crafted to stand out. Shop now on AFOMA Marketplace.",
+    ogImage: `${process.env.NEXT_PUBLIC_URL}/assets/ogImages/fashion.jpg`,
+    ogImageAlt: "Ethical artisan-made fashion and accessories on AFOMA Marketplace",
+    ogUrl: `${process.env.NEXT_PUBLIC_URL}/category/fashion`,
+    subCategory: [
+      {
+        href: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-men`,
+        name: "For Men"
+      },
+      {
+        href: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-women`,
+        name: "For Women"
+      },
+      {
+        href: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-kids`,
+        name: "For Kids"
+      },
+      {
+        href: `${process.env.NEXT_PUBLIC_URL}/category/fashion/for-unisex`,
+        name: "For Unisex"
+      }
+    ],
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Shop Handmade Fashion Online | Ethical Apparel & Accessories – AFOMA",
+      url: "https://afomamarketplace.com/category/fashion",
+      headline: "Shop Handmade Fashion Online | Ethical Apparel & Accessories – AFOMA",
+      description:
+        "Discover handmade clothing and accessories crafted by global artisans. Ethically sourced, beautifully made, and ready to ship. Shop fashion that empowers",
+      mainEntity: {
+        "@type": "Article",
+        headline: "Unique Artisan Fashion | AFOMA Marketplace",
         description:
-          "Discover handmade clothing and accessories crafted by global artisans. Ethically sourced, beautifully made, and ready to ship. Shop fashion that empowers",
-        mainEntity: {
-          "@type": "Article",
-          headline: "Unique Artisan Fashion | AFOMA Marketplace",
-          description:
-            "Explore handcrafted fashion at AFOMA Marketplace. Discover designs that celebrate cultural artistry and timeless beauty.",
-          author: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://www.afomamarketplace.com/assets/logo.png",
-            },
-          },
-          datePublished: "2024-11-20",
-          dateModified: "2024-11-20",
+          "Explore handcrafted fashion at AFOMA Marketplace. Discover designs that celebrate cultural artistry and timeless beauty.",
+        author: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
         },
-        breadcrumb: {
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://www.afomamarketplace.com/",
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Categories",
-              item: "https://www.afomamarketplace.com/category",
-            },
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: "Fashion",
-              item: "https://www.afomamarketplace.com/category/fashion",
-            },
-          ],
+        publisher: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://www.afomamarketplace.com/assets/logo.png",
+          },
         },
+        datePublished: "2024-11-20",
+        dateModified: "2024-11-20",
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://www.afomamarketplace.com/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Categories",
+            item: "https://www.afomamarketplace.com/category",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: "Fashion",
+            item: "https://www.afomamarketplace.com/category/fashion",
+          },
+        ],
       },
     },
-    "home-and-living": {
-      title: "Discover Home and Living Treasures | AFOMA Marketplace",
-      metaTitle: "Discover Home and Living Treasures | AFOMA Marketplace",
-      metaDescription:
+  },
+  "home-and-living": {
+    title: "Discover Home and Living Treasures | AFOMA Marketplace",
+    metaTitle: "Discover Home and Living Treasures | AFOMA Marketplace",
+    metaDescription:
+      "Discover unique Home and Living treasures handcrafted by global artisans. Transform your space with one-of-a-kind decor and furniture at AFOMA Marketplace.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Discover Home and Living Treasures | AFOMA Marketplace",
+      url: "https://www.afomamarketplace.com/category/home-and-living",
+      headline: "Discover Home and Living Treasures | AFOMA Marketplace",
+      description:
         "Discover unique Home and Living treasures handcrafted by global artisans. Transform your space with one-of-a-kind decor and furniture at AFOMA Marketplace.",
-      jsonLd: {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Discover Home and Living Treasures | AFOMA Marketplace",
-        url: "https://www.afomamarketplace.com/category/home-and-living",
+      mainEntity: {
+        "@type": "Article",
         headline: "Discover Home and Living Treasures | AFOMA Marketplace",
         description:
-          "Discover unique Home and Living treasures handcrafted by global artisans. Transform your space with one-of-a-kind decor and furniture at AFOMA Marketplace.",
-        mainEntity: {
-          "@type": "Article",
-          headline: "Discover Home and Living Treasures | AFOMA Marketplace",
-          description:
-            "Browse unique Home and Living treasures, including handcrafted decor and furniture from global artisans. Create a personalized, stylish living space.",
-          author: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://www.afomamarketplace.com/assets/logo.png",
-            },
-          },
-          datePublished: "2024-11-20",
-          dateModified: "2024-11-20",
+          "Browse unique Home and Living treasures, including handcrafted decor and furniture from global artisans. Create a personalized, stylish living space.",
+        author: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
         },
-        breadcrumb: {
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://www.afomamarketplace.com/",
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Categories",
-              item: "https://www.afomamarketplace.com/category",
-            },
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: "Home and Living",
-              item: "https://www.afomamarketplace.com/category/home-and-living",
-            },
-          ],
+        publisher: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://www.afomamarketplace.com/assets/logo.png",
+          },
         },
+        datePublished: "2024-11-20",
+        dateModified: "2024-11-20",
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://www.afomamarketplace.com/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Categories",
+            item: "https://www.afomamarketplace.com/category",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: "Home and Living",
+            item: "https://www.afomamarketplace.com/category/home-and-living",
+          },
+        ],
       },
     },
-    "jewelry-and-accessories": {
-      title: "Shop Jewelry & Accessories | AFOMA Marketplace",
-      metaTitle: "Shop Jewelry & Accessories | AFOMA Marketplace",
-      metaDescription:
-        "JExplore artisanal Jewelry and accessories at AFOMA Marketplace. From timeless classics to modern trends, find the perfect piece to match your style.",
-      jsonLd: {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Shop Jewelry & Accessories | AFOMA Marketplace",
-        url: "https://www.afomamarketplace.com/category/jewelry-and-accessories",
+  },
+  "jewelry-and-accessories": {
+    title: "Shop Jewelry & Accessories | AFOMA Marketplace",
+    metaTitle: "Shop Jewelry & Accessories | AFOMA Marketplace",
+    metaDescription:
+      "JExplore artisanal Jewelry and accessories at AFOMA Marketplace. From timeless classics to modern trends, find the perfect piece to match your style.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Shop Jewelry & Accessories | AFOMA Marketplace",
+      url: "https://www.afomamarketplace.com/category/jewelry-and-accessories",
+      headline: "Shop Jewelry & Accessories | AFOMA Marketplace",
+      description:
+        "Discover handcrafted Jewelry and accessories at AFOMA Marketplace. Shop unique, artisanal designs that elevate your style and reflect creativity.",
+      mainEntity: {
+        "@type": "Article",
         headline: "Shop Jewelry & Accessories | AFOMA Marketplace",
         description:
-          "Discover handcrafted Jewelry and accessories at AFOMA Marketplace. Shop unique, artisanal designs that elevate your style and reflect creativity.",
-        mainEntity: {
-          "@type": "Article",
-          headline: "Shop Jewelry & Accessories | AFOMA Marketplace",
-          description:
-            "Explore a curated collection of handcrafted Jewelry and accessories at AFOMA Marketplace. Find timeless and trendy pieces that express your style.",
-          author: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://www.afomamarketplace.com/assets/logo.png",
-            },
-          },
-          datePublished: "2024-11-20",
-          dateModified: "2024-11-20",
+          "Explore a curated collection of handcrafted Jewelry and accessories at AFOMA Marketplace. Find timeless and trendy pieces that express your style.",
+        author: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
         },
-        breadcrumb: {
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://www.afomamarketplace.com/",
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Categories",
-              item: "https://www.afomamarketplace.com/category",
-            },
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: "jewelry & Accessories",
-              item: "https://www.afomamarketplace.com/category/jewelry-and-accessories",
-            },
-          ],
+        publisher: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://www.afomamarketplace.com/assets/logo.png",
+          },
         },
+        datePublished: "2024-11-20",
+        dateModified: "2024-11-20",
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://www.afomamarketplace.com/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Categories",
+            item: "https://www.afomamarketplace.com/category",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: "jewelry & Accessories",
+            item: "https://www.afomamarketplace.com/category/jewelry-and-accessories",
+          },
+        ],
       },
     },
-    "personal-care-and-bath-products": {
-      title: "Shop Personal Care and Bath Products | AFOMA Marketplace",
-      metaTitle: "Shop Personal Care and Bath Products | AFOMA Marketplace",
-      metaDescription:
+  },
+  "personal-care-and-bath-products": {
+    title: "Shop Personal Care and Bath Products | AFOMA Marketplace",
+    metaTitle: "Shop Personal Care and Bath Products | AFOMA Marketplace",
+    metaDescription:
+      "Shop high-quality Personal Care and Bath Products at AFOMA Marketplace. Discover handmade soaps, bath essentials, and body care for every skin type.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Shop Personal Care and Bath Products | AFOMA Marketplace",
+      url: "https://afomamarketplace.com/category/personal-care-and-bath-products",
+      headline: "Shop Personal Care and Bath Products | AFOMA Marketplace",
+      description:
         "Shop high-quality Personal Care and Bath Products at AFOMA Marketplace. Discover handmade soaps, bath essentials, and body care for every skin type.",
-      jsonLd: {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Shop Personal Care and Bath Products | AFOMA Marketplace",
-        url: "https://afomamarketplace.com/category/personal-care-and-bath-products",
+      mainEntity: {
+        "@type": "Article",
         headline: "Shop Personal Care and Bath Products | AFOMA Marketplace",
         description:
-          "Shop high-quality Personal Care and Bath Products at AFOMA Marketplace. Discover handmade soaps, bath essentials, and body care for every skin type.",
-        mainEntity: {
-          "@type": "Article",
-          headline: "Shop Personal Care and Bath Products | AFOMA Marketplace",
-          description:
-            "Discover high-quality Personal Care and Bath Products at AFOMA Marketplace. Find handmade soaps, bath bombs, scrubs, and more for all your self-care needs.",
-          author: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://afomamarketplace.com/assets/logo.png",
-            },
-          },
-          datePublished: "2024-11-22",
-          dateModified: "2024-11-22",
+          "Discover high-quality Personal Care and Bath Products at AFOMA Marketplace. Find handmade soaps, bath bombs, scrubs, and more for all your self-care needs.",
+        author: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
         },
-        breadcrumb: {
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://afomamarketplace.com/",
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Categories",
-              item: "https://afomamarketplace.com/category",
-            },
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: "Personal Care and Bath Products",
-              item: "https://afomamarketplace.com/category/personal-care-and-bath-products",
-            },
-          ],
+        publisher: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://afomamarketplace.com/assets/logo.png",
+          },
         },
+        datePublished: "2024-11-22",
+        dateModified: "2024-11-22",
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://afomamarketplace.com/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Categories",
+            item: "https://afomamarketplace.com/category",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: "Personal Care and Bath Products",
+            item: "https://afomamarketplace.com/category/personal-care-and-bath-products",
+          },
+        ],
       },
     },
-    "stationery-and-paper-goods": {
-      title: "Curated Stationery & Art Goods | AFOMA Marketplace",
-      metaTitle: "Curated Stationery & Art Goods | AFOMA Marketplace",
-      metaDescription:
+  },
+  "stationery-and-paper-goods": {
+    title: "Curated Stationery & Art Goods | AFOMA Marketplace",
+    metaTitle: "Curated Stationery & Art Goods | AFOMA Marketplace",
+    metaDescription:
+      "Discover premium stationery and paper goods at AFOMA Marketplace. Find everything from journals to labels for your creative and organizational needs.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Curated Stationery & Art Goods | AFOMA Marketplace",
+      url: "https://afomamarketplace.com/category/stationery-and-paper-goods",
+      headline: "Curated Stationery & Art Goods | AFOMA Marketplace",
+      description:
         "Discover premium stationery and paper goods at AFOMA Marketplace. Find everything from journals to labels for your creative and organizational needs.",
-      jsonLd: {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Curated Stationery & Art Goods | AFOMA Marketplace",
-        url: "https://afomamarketplace.com/category/stationery-and-paper-goods",
+      mainEntity: {
+        "@type": "Article",
         headline: "Curated Stationery & Art Goods | AFOMA Marketplace",
         description:
-          "Discover premium stationery and paper goods at AFOMA Marketplace. Find everything from journals to labels for your creative and organizational needs.",
-        mainEntity: {
-          "@type": "Article",
-          headline: "Curated Stationery & Art Goods | AFOMA Marketplace",
-          description:
-            "Explore premium stationery and paper goods at AFOMA Marketplace. Find everything from journals to labels for your creative and organizational needs.",
-          author: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://afomamarketplace.com/assets/logo.png",
-            },
-          },
-          datePublished: "2024-11-22",
-          dateModified: "2024-11-22",
+          "Explore premium stationery and paper goods at AFOMA Marketplace. Find everything from journals to labels for your creative and organizational needs.",
+        author: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
         },
-        breadcrumb: {
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://afomamarketplace.com/",
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Categories",
-              item: "https://afomamarketplace.com/category",
-            },
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: "Stationery and Paper Goods",
-              item: "https://afomamarketplace.com/category/stationery-and-paper-goods",
-            },
-          ],
+        publisher: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://afomamarketplace.com/assets/logo.png",
+          },
         },
+        datePublished: "2024-11-22",
+        dateModified: "2024-11-22",
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://afomamarketplace.com/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Categories",
+            item: "https://afomamarketplace.com/category",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: "Stationery and Paper Goods",
+            item: "https://afomamarketplace.com/category/stationery-and-paper-goods",
+          },
+        ],
       },
     },
-    "toys-and-games": {
-      title: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
-      metaTitle: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
-      metaDescription:
+  },
+  "toys-and-games": {
+    title: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
+    metaTitle: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
+    metaDescription:
+      "Shop unique Toys and Games for kids and pets at AFOMA Marketplace. Handcrafted treasures for endless joy, imagination, and shared moments.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
+      url: "https://afomamarketplace.com/category/toys-and-games",
+      headline: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
+      description:
         "Shop unique Toys and Games for kids and pets at AFOMA Marketplace. Handcrafted treasures for endless joy, imagination, and shared moments.",
-      jsonLd: {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
-        url: "https://afomamarketplace.com/category/toys-and-games",
+      mainEntity: {
+        "@type": "Article",
         headline: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
         description:
-          "Shop unique Toys and Games for kids and pets at AFOMA Marketplace. Handcrafted treasures for endless joy, imagination, and shared moments.",
-        mainEntity: {
-          "@type": "Article",
-          headline: "Unique Toys and Games for Kids & Pets | AFOMA Marketplace",
-          description:
-            "Discover unique Toys and Games for kids and pets at AFOMA Marketplace. Explore handcrafted toys for joyful play and shared family moments.",
-          author: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-          },
-          publisher: {
-            "@type": "Organization",
-            name: "AFOMA Marketplace",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://afomamarketplace.com/assets/logo.png",
-            },
-          },
-          datePublished: "2024-11-22",
-          dateModified: "2024-11-22",
+          "Discover unique Toys and Games for kids and pets at AFOMA Marketplace. Explore handcrafted toys for joyful play and shared family moments.",
+        author: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
         },
-        breadcrumb: {
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://afomamarketplace.com/",
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Categories",
-              item: "https://afomamarketplace.com/category",
-            },
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: "Toys and Games",
-              item: "https://afomamarketplace.com/category/toys-and-games",
-            },
-          ],
+        publisher: {
+          "@type": "Organization",
+          name: "AFOMA Marketplace",
+          logo: {
+            "@type": "ImageObject",
+            url: "https://afomamarketplace.com/assets/logo.png",
+          },
         },
+        datePublished: "2024-11-22",
+        dateModified: "2024-11-22",
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: "https://afomamarketplace.com/",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Categories",
+            item: "https://afomamarketplace.com/category",
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: "Toys and Games",
+            item: "https://afomamarketplace.com/category/toys-and-games",
+          },
+        ],
       },
     },
-    default: {
-      title: "Arts and Collectibles | AFOMA Marketplace",
-      metaTitle: "Explore Art, Crafts & DIY Projects | AFOMA Marketplace",
-      metaDescription:
-        "Dive into art, crafts & DIY projects with AFOMA Marketplace Blogs. Get inspired with tutorials, tips, and stories from the world of handmade goods",
-      jsonLd: {},
-    },
-  };
-  if (
-    !context.query?.categoryId ||
-    !queries.includes(context.query?.categoryId.toLowerCase())
-  ) {
+  },
+  default: {
+    title: "Arts and Collectibles | AFOMA Marketplace",
+    metaTitle: "Explore Art, Crafts & DIY Projects | AFOMA Marketplace",
+    metaDescription:
+      "Dive into art, crafts & DIY projects with AFOMA Marketplace Blogs. Get inspired with tutorials, tips, and stories from the world of handmade goods",
+    jsonLd: {},
+  },
+};
+
+export const getServerSideProps = async (context) => {
+  const rawCategoryId = context.query?.categoryId?.toLowerCase();
+
+  // 1️⃣ Validate category
+  if (!rawCategoryId || !VALID_CATEGORIES.has(rawCategoryId)) {
     return { notFound: true };
   }
 
-  let rawCategoryId = context.query.categoryId.toLowerCase();
-  // 2. Check for ANY extra query parameters (except 'categoryId')
-  const queryKeys = Object.keys(context.query);
-  const hasExtraParams = queryKeys.some((key) => key !== 'categoryId');
-
-  if (hasExtraParams) {
+  // 2️⃣ Enforce clean URL (only /category/:categoryId)
+  if (Object.keys(context.query).length > 1) {
     return {
       redirect: {
-        destination: `/category/${rawCategoryId}`, // clean URL
+        destination: `/category/${rawCategoryId}`,
         permanent: true,
       },
     };
   }
 
-  const pageData = pageDataMap[context.query?.categoryId.toLowerCase()];
+  // 3️⃣ Fetch SEO data only
+  const pageData = PAGE_DATA_MAP[rawCategoryId] || PAGE_DATA_MAP.default;
 
   return {
     props: { pageData },

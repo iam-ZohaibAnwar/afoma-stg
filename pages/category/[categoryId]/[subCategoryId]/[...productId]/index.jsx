@@ -1,54 +1,84 @@
-import Faq from "@/components/Faq";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import ProductCardComponent from "@/components/ProductCard";
-import StarRating from "@/components/StarRating";
-import ProductImages from "@/components/ProductImages";
-import ProductInfo from "@/components/ProductInfo";
-import ProductActions from "@/components/ProductActions";
-import SellerInfo from "@/components/SellerInfo";
-import ReviewsSection from "@/components/ReviewsSection";
-import {
-  faArrowLeft,
-  faArrowRight,
-  faCircleUser,
-  faStar,
-} from "@fortawesome/free-solid-svg-icons";
-import {
-  faAngleDown,
-  faAngleRight,
-  faAngleUp,
-  faMinus,
-  faPlayCircle,
-  faPlus,
-  faStar as farStar,
-  faShareNodes,
-  faSquareCheck,
-  faStarHalfAlt,
-} from "@fortawesome/pro-regular-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Dialog, Menu, Transition } from "@headlessui/react";
-import axios from "axios";
-//import { Noto_Serif } from "next/font/google";
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { Fragment, useEffect, useRef, useState } from "react";
+import axios from "axios";
 import toast from "react-hot-toast";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
-import Router from "next/router";
-import { categoryMapIdPrd, categoryMapIdStg, subCategoryMapIdPrd, subCategoryMapIdStg } from "@/lib/categoryMap";
-import { faReply } from "@fortawesome/pro-light-svg-icons";
+
+// =====================
+// FontAwesome Icons
+// =====================
+import {
+  faArrowLeft,
+  faArrowRight,
+  faCircleUser,
+  faPlus,
+  faStar,
+} from "@fortawesome/free-solid-svg-icons";
+
+import {
+  faAngleDown,
+  faAngleRight,
+  faAngleUp,
+  faMinus,
+  faShareNodes,
+  faStar as farStar,
+} from "@fortawesome/pro-regular-svg-icons";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+// =====================
+// Headless UI (used)
+// =====================
+import { Menu, Transition } from "@headlessui/react";
+
+// =====================
+// Utils / Context
+// =====================
+import {
+  categoryMapIdPrd,
+  categoryMapIdStg,
+  subCategoryMapIdPrd,
+  subCategoryMapIdStg,
+} from "@/lib/categoryMap";
 import { calculateSurcharge } from "@/utils/pricingUtils";
-import ModalImageViewer from "@/components/ModalImageViewer";
-import FacebookPixel from "@/components/FacebookPixel";
-import ProductViewModel from "@/components/ProductViewModel";
-import CategoryCard from "@/components/CategoryCard";
 import { useCart } from "@/context/CartProvider";
-//const noto = Noto_Serif({ subsets: ["latin"] });
+
+// =====================
+// Lazy Loaded Components (BIG PERF WIN 🚀)
+// =====================
+const Header = dynamic(() => import("@/components/Header"), { ssr: false });
+const Footer = dynamic(() => import("@/components/Footer"));
+const ProductCardComponent = dynamic(() => import("@/components/ProductCard"));
+const CategoryCard = dynamic(() => import("@/components/CategoryCard"));
+const StarRating = dynamic(() => import("@/components/StarRating"));
+
+const ModalImageViewer = dynamic(
+  () => import("@/components/ModalImageViewer"),
+  { ssr: false }
+);
+
+const ProductViewModel = dynamic(
+  () => import("@/components/ProductViewModel"),
+  { ssr: false }
+);
+
+const FacebookPixel = dynamic(
+  () => import("@/components/FacebookPixel"),
+  { ssr: false }
+);
+
+// =====================
+// Slider (Client-only)
+// =====================
+const Slider = dynamic(() => import("react-slick"), { ssr: false });
+
+// Slider styles (required)
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
 
 function ProductDetail({ product, pageData }) {
   const { cart, addToCart } = useCart();
@@ -63,15 +93,6 @@ function ProductDetail({ product, pageData }) {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
-  };
-
-  const applySurcharge = () => {
-    if (product) {
-      let userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
-      setUserCountry(userInfo.country);
-      setUserCurrency(userInfo?.currency);
-      product = calculateSurcharge([product])?.[0];
-    }
   };
 
   const sliderRef = useRef(null);
@@ -3131,36 +3152,41 @@ function ProductDetail({ product, pageData }) {
   );
 }
 
-// Configure axios with timeout and persistent headers
+// ==============================
+// Axios Client (singleton)
+// ==============================
 const apiClient = axios.create({
-  timeout: 3000, // 3-second timeout
+  timeout: 3000,
   headers: {
     "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
     Connection: "keep-alive",
   },
 });
 
-// Precompute environment check
+// ==============================
+// Environment
+// ==============================
 const isStaging =
   process.env.NEXT_PUBLIC_BASE_URL ===
   "https://development.afomamarketplace.com";
 
-// Create a Set for faster lookups
+// ==============================
+// Static Lookups
+// ==============================
 const validQueries = new Set(["body-oils", "hair-oils"]);
 
-// Define page data outside function to avoid recreation
 const pageDataMap = {
   "body-oils": {
     title: "Natural Body Oils for Dry and Sensitive Skin | AFOMA",
     metaTitle: "Natural Body Oils for Dry and Sensitive Skin | AFOMA",
     metaDescription:
-      "Browse a collection of natural body oils formulated for dry skin, sensitive skin, and more. Discover deeply moisturizing and nourishing oils.",
+      "Browse a collection of natural body oils formulated for dry skin, sensitive skin, and more.",
   },
   "hair-oils": {
     title: "Hair Oils | Natural Oils for All Hair Types | AFOMA",
     metaTitle: "Hair Oils | Natural Oils for All Hair Types | AFOMA",
     metaDescription:
-      "Discover a variety of natural hair oils at AFOMA. Shop oils for dry hair, damaged hair, curly hair, and more from artisans.",
+      "Discover a variety of natural hair oils at AFOMA.",
   },
   default: {
     title: "",
@@ -3169,150 +3195,179 @@ const pageDataMap = {
   },
 };
 
-// Simple cache implementation (in-memory, adjust TTL as needed)
+// ==============================
+// In-memory Cache (FULL PAGE)
+// ==============================
 const productCache = new Map();
-const CACHE_TTL = 10000; // 10 seconds
+const CACHE_TTL = 10_000; // 10 seconds
 
-export async function getServerSideProps(context) {
-  // Simplified slug extraction
-  const productId = context.query.productId || [];
-  const slug = productId.length > 0 ? productId[productId.length - 1] : "";
-  if (productId.length > 2 || !slug) {
+// ==============================
+// getServerSideProps
+// ==============================
+export async function getServerSideProps({ query, res }) {
+  // ---- Normalize query ONCE
+  const categorySlug = query?.categoryId?.toLowerCase();
+  const subCategorySlug = query?.subCategoryId?.toLowerCase();
+  const productId = query?.productId || [];
+  const slug = productId.at(-1)?.toLowerCase();
+
+  // ---- Basic URL validation
+  if (!slug || productId.length > 2) {
     return { notFound: true };
   }
 
-  // Determine ID from environment
-  const subCategoryMap = isStaging ? subCategoryMapIdStg : subCategoryMapIdPrd;
+  // ---- Map IDs
   const categoryMap = isStaging ? categoryMapIdStg : categoryMapIdPrd;
-  const categoryId = categoryMap[context.query.categoryId?.toLowerCase()];
-  const subCategoryId = subCategoryMap[context.query.subCategoryId?.toLowerCase()];
-  const childCategoryId = subCategoryMap[slug?.toLowerCase()];
+  const subCategoryMap = isStaging ? subCategoryMapIdStg : subCategoryMapIdPrd;
 
-  const pageData = validQueries.has(slug?.toLowerCase())
-    ? pageDataMap[slug.toLowerCase()]
-    : ""
+  const categoryId = categoryMap[categorySlug];
+  const subCategoryId = subCategoryMap[subCategorySlug];
+  const childCategoryId = subCategoryMap[slug];
 
-
-  if(!subCategoryId || !categoryId){
+  if (!categoryId || !subCategoryId) {
     return { notFound: true };
   }
 
+  // ---- Static category page (no product)
   if (childCategoryId) {
-    return { props: { product: null, pageData } };
-  }
-
-  // Check cache first
-  if (slug && productCache.has(slug)) {
     return {
       props: {
-        product: productCache.get(slug),
-        pageData: null,
+        product: null,
+        pageData: validQueries.has(slug)
+          ? pageDataMap[slug]
+          : null,
       },
     };
+  }
+
+  // ---- Serve from cache
+  if (productCache.has(slug)) {
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=10, stale-while-revalidate=59"
+    );
+    return { props: productCache.get(slug) };
   }
 
   try {
-    // Fetch product data with timeout
-    const response = await apiClient.get(
+    // ==========================
+    // Fetch product
+    // ==========================
+    const { data: product } = await apiClient.get(
       `${process.env.NEXT_PUBLIC_BASE_URL}/products/slug/${slug}`
     );
 
-    if(response && response.data.Category.slug !== context.query.categoryId?.toLowerCase()){
+    // ---- Strong URL validation
+    if (
+      product?.Category?.slug !== categorySlug ||
+      product?.SubCategory?.slug !== subCategorySlug ||
+      (product?.childCategory &&
+        product?.childCategory?.slug !== productId[0]?.toLowerCase())
+    ) {
       return { notFound: true };
     }
 
-    if(response && response.data.SubCategory.slug !== context.query.subCategoryId?.toLowerCase()){
-      return { notFound: true };
-    }
-
-    if(response && response.data.childCategory && response.data.childCategory.slug !== productId[0]?.toLowerCase()){
-      return { notFound: true };
-    }
-
-    const product = response.data;
-
-    // Fetch additional data server-side
-    const [sellerResponse, reviewsResponse, allReviewsResponse, bestSellingResponse, categoryProductsResponse, sellerProductsResponse] = await Promise.all([
-      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/sellers/store/${product?.seller?.storeSlug}`).catch(() => null),
-      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/reviews/average-review/${product?._id}`).catch(() => null),
-      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/reviews/single/${product?._id}`).catch(() => null),
-      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/bestSelling/Product`).catch(() => null),
-      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/category/${product?.Category?.name}`).catch(() => null),
-      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/by/${product?.seller?._id}`).catch(() => null),
+    // ==========================
+    // Parallel Fetches
+    // ==========================
+    const [
+      sellerRes,
+      reviewsRes,
+      allReviewsRes,
+      bestSellingRes,
+      categoryProductsRes,
+      sellerProductsRes,
+    ] = await Promise.allSettled([
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/sellers/store/${product.seller?.storeSlug}`),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/reviews/average-review/${product._id}`),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/reviews/single/${product._id}`),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/bestSelling/Product`),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/category/${product.Category?.name}`),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/by/${product.seller?._id}`),
     ]);
 
-    // Process seller
-    let seller = null;
-    if (sellerResponse && sellerResponse.data && sellerResponse.data.userRole === "seller") {
-      seller = sellerResponse.data;
-    }
+    // ==========================
+    // Process responses
+    // ==========================
+    const seller =
+      sellerRes.status === "fulfilled" &&
+      sellerRes.value?.data?.userRole === "seller"
+        ? sellerRes.value.data
+        : null;
 
-    // Process reviews
-    let reviews = null;
-    if (reviewsResponse && reviewsResponse.data) {
-      reviews = reviewsResponse.data;
-    }
+    const reviews =
+      reviewsRes.status === "fulfilled"
+        ? reviewsRes.value?.data
+        : null;
 
-    // Process all reviews
-    let allReviews = [];
-    if (allReviewsResponse && allReviewsResponse.data) {
-      allReviews = allReviewsResponse.data.sort((a, b) => {
-        const timestampA = new Date(a.createdAt).getTime();
-        const timestampB = new Date(b.createdAt).getTime();
-        return timestampB - timestampA;
-      });
-    }
+    const allReviews =
+      allReviewsRes.status === "fulfilled"
+        ? allReviewsRes.value.data.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          )
+        : [];
 
-    // Process best selling category
-    let bestSellingCategory = [];
-    if (bestSellingResponse && bestSellingResponse.data) {
-      const responseData = Array.isArray(bestSellingResponse.data)
-        ? bestSellingResponse.data
-        : bestSellingResponse.data.products;
-      bestSellingCategory = responseData.map((item) => ({
-        Category: item?.productDetails?.Category,
-        SubCategory: item?.productDetails?.SubCategory,
-      }));
-    }
+    const bestSellingCategory =
+      bestSellingRes.status === "fulfilled"
+        ? (Array.isArray(bestSellingRes.value.data)
+            ? bestSellingRes.value.data
+            : bestSellingRes.value.data?.products || []
+          ).map((i) => ({
+            Category: i?.productDetails?.Category,
+            SubCategory: i?.productDetails?.SubCategory,
+          }))
+        : [];
 
-    // Process category products
-    let categoryProducts = [];
-    if (categoryProductsResponse && categoryProductsResponse.data) {
-      categoryProducts = categoryProductsResponse.data
-        .filter((data) => data.seller?._id !== product?.seller?._id && data._id !== product?._id)
-        .slice(0, 6);
-    }
+    const categoryProducts =
+      categoryProductsRes.status === "fulfilled"
+        ? categoryProductsRes.value.data
+            .filter(
+              (p) =>
+                p._id !== product._id &&
+                p.seller?._id !== product.seller?._id
+            )
+            .slice(0, 6)
+        : [];
 
-    // Process seller products
     let productCount = 0;
     let allProducts = [];
-    if (sellerProductsResponse && sellerProductsResponse.data) {
-      const approvedProducts = sellerProductsResponse.data.filter(
-        (product) => product?.productStatus === "Approved" && product.status === 1
+
+    if (sellerProductsRes.status === "fulfilled") {
+      const approved = sellerProductsRes.value.data.filter(
+        (p) => p.productStatus === "Approved" && p.status === 1
       );
-      productCount = approvedProducts.length;
-      allProducts = approvedProducts;
+      productCount = approved.length;
+      allProducts = approved;
     }
 
-    // Update cache
-    productCache.set(slug, product);
+    // ==========================
+    // Final props object
+    // ==========================
+    const props = {
+      product,
+      pageData: null,
+      seller,
+      reviews,
+      allReviews,
+      bestSellingCategory,
+      categoryProducts,
+      productCount,
+      allProducts,
+    };
+
+    // ---- Cache full payload
+    productCache.set(slug, props);
     setTimeout(() => productCache.delete(slug), CACHE_TTL);
 
-    return {
-      props: {
-        product,
-        pageData: null,
-        seller,
-        reviews,
-        allReviews,
-        bestSellingCategory,
-        categoryProducts,
-        productCount,
-        allProducts,
-      },
-    };
-  } catch (e) {
-    console.error("Error fetching product data:", e);
+    // ---- CDN cache hint
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=10, stale-while-revalidate=59"
+    );
+
+    return { props };
+  } catch (error) {
+    console.error("Product SSR error:", error);
     return { notFound: true };
   }
 }
