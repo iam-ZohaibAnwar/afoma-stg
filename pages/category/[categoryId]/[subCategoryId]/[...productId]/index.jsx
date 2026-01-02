@@ -3,6 +3,11 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ProductCardComponent from "@/components/ProductCard";
 import StarRating from "@/components/StarRating";
+import ProductImages from "@/components/ProductImages";
+import ProductInfo from "@/components/ProductInfo";
+import ProductActions from "@/components/ProductActions";
+import SellerInfo from "@/components/SellerInfo";
+import ReviewsSection from "@/components/ReviewsSection";
 import {
   faArrowLeft,
   faArrowRight,
@@ -47,8 +52,9 @@ import { useCart } from "@/context/CartProvider";
 
 function ProductDetail({ product, pageData }) {
   const { cart, addToCart } = useCart();
-  console.log("Product Detail Page Rendered");
-  console.log('product :>> ', cart);
+  useEffect(() => {  console.log("Product Detail Page Rendered");
+  console.log('product :>> ', cart);}, []);
+
   const [productAsDisabled, setProductAsDisabled] = useState(false);
 
   const formatPrice = (price) => {
@@ -3210,7 +3216,7 @@ export async function getServerSideProps(context) {
     const response = await apiClient.get(
       `${process.env.NEXT_PUBLIC_BASE_URL}/products/slug/${slug}`
     );
-    
+
     if(response && response.data.Category.slug !== context.query.categoryId?.toLowerCase()){
       return { notFound: true };
     }
@@ -3222,14 +3228,87 @@ export async function getServerSideProps(context) {
     if(response && response.data.childCategory && response.data.childCategory.slug !== productId[0]?.toLowerCase()){
       return { notFound: true };
     }
+
+    const product = response.data;
+
+    // Fetch additional data server-side
+    const [sellerResponse, reviewsResponse, allReviewsResponse, bestSellingResponse, categoryProductsResponse, sellerProductsResponse] = await Promise.all([
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/sellers/store/${product?.seller?.storeSlug}`).catch(() => null),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/reviews/average-review/${product?._id}`).catch(() => null),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/reviews/single/${product?._id}`).catch(() => null),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/bestSelling/Product`).catch(() => null),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/category/${product?.Category?.name}`).catch(() => null),
+      apiClient.get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/by/${product?.seller?._id}`).catch(() => null),
+    ]);
+
+    // Process seller
+    let seller = null;
+    if (sellerResponse && sellerResponse.data && sellerResponse.data.userRole === "seller") {
+      seller = sellerResponse.data;
+    }
+
+    // Process reviews
+    let reviews = null;
+    if (reviewsResponse && reviewsResponse.data) {
+      reviews = reviewsResponse.data;
+    }
+
+    // Process all reviews
+    let allReviews = [];
+    if (allReviewsResponse && allReviewsResponse.data) {
+      allReviews = allReviewsResponse.data.sort((a, b) => {
+        const timestampA = new Date(a.createdAt).getTime();
+        const timestampB = new Date(b.createdAt).getTime();
+        return timestampB - timestampA;
+      });
+    }
+
+    // Process best selling category
+    let bestSellingCategory = [];
+    if (bestSellingResponse && bestSellingResponse.data) {
+      const responseData = Array.isArray(bestSellingResponse.data)
+        ? bestSellingResponse.data
+        : bestSellingResponse.data.products;
+      bestSellingCategory = responseData.map((item) => ({
+        Category: item?.productDetails?.Category,
+        SubCategory: item?.productDetails?.SubCategory,
+      }));
+    }
+
+    // Process category products
+    let categoryProducts = [];
+    if (categoryProductsResponse && categoryProductsResponse.data) {
+      categoryProducts = categoryProductsResponse.data
+        .filter((data) => data.seller?._id !== product?.seller?._id && data._id !== product?._id)
+        .slice(0, 6);
+    }
+
+    // Process seller products
+    let productCount = 0;
+    let allProducts = [];
+    if (sellerProductsResponse && sellerProductsResponse.data) {
+      const approvedProducts = sellerProductsResponse.data.filter(
+        (product) => product?.productStatus === "Approved" && product.status === 1
+      );
+      productCount = approvedProducts.length;
+      allProducts = approvedProducts;
+    }
+
     // Update cache
-    productCache.set(slug, response.data);
+    productCache.set(slug, product);
     setTimeout(() => productCache.delete(slug), CACHE_TTL);
 
     return {
       props: {
-        product: response.data,
+        product,
         pageData: null,
+        seller,
+        reviews,
+        allReviews,
+        bestSellingCategory,
+        categoryProducts,
+        productCount,
+        allProducts,
       },
     };
   } catch (e) {

@@ -32,17 +32,11 @@ import { useCart } from "@/context/CartProvider";
 const Cart = ({
 
   setCart,
-  removeFromCart,
   clearCart,
-  deleteFromCart,
-  subTotal,
   setSubTotal,
-  totalShippingRate,
-  fetchedShippingRate,
-  userInfoStored,
   saveCart,
 }) => {
-  const {cart, addToCart} = useCart();
+  const {cart, addToCart, removeFromCart, deleteFromCart, subTotal, totalShippingRate, fetchedShippingRate, userInfoStored} = useCart();
   const [loading, setLoading] = useState(true);
   const [rateOptionsError, setRateOptionsError] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
