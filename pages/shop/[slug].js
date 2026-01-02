@@ -1541,40 +1541,45 @@ const SellerInfoPage = ({ cart, sellerInfo, addToCart }) => {
   );
 };
 
+// ✅ Reusable axios instance (outside function = faster)
+const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+  timeout: 4000, // prevent SSR hanging
+  headers: {
+    "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+  },
+});
+
 export async function getServerSideProps(context) {
-  const slug = context.query.slug;
+  const slug = context.query?.slug;
+
+  // 1️⃣ Validate slug early
+  if (!slug || typeof slug !== "string") {
+    return { notFound: true };
+  }
 
   try {
-    if (slug) {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/sellers/store/${slug}`,
-        {
-          headers: {
-            "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-          },
-        }
-      );
-      if (response.data && response.data.userRole === "seller") {
-        return {
-          props: {
-            sellerInfo: response.data,
-          },
-        };
-      } else {
-        return {
-          notFound: true,
-        };
-      }
-    } else {
-      return {
-        notFound: true,
-      };
+    // 2️⃣ Fetch seller data
+    const { data } = await apiClient.get(`/sellers/store/${slug}`);
+
+    // 3️⃣ Validate seller
+    if (!data || data.userRole !== "seller") {
+      return { notFound: true };
     }
-  } catch (e) {
-    // console.log("Error fetching product data:", e);
+
+    // 4️⃣ Return props
     return {
-      notFound: true,
+      props: {
+        sellerInfo: data,
+      },
     };
+  } catch (error) {
+    // Optional: log only in dev
+    if (process.env.NODE_ENV === "development") {
+      console.error("Seller SSR error:", error.message);
+    }
+
+    return { notFound: true };
   }
 }
 
