@@ -30,7 +30,12 @@ module.exports = {
     ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: true,
+    domains: [
+      "afomamarketplace.com",
+      "staging.afomamarketplace.com",
+      "cdn.afomamarketplace.com",
+    ],
+    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
   },
   async redirects() {
     return [
