@@ -30,35 +30,7 @@ module.exports = {
     ignoreDuringBuilds: true,
   },
 images: {
-    // ✅ Use ONLY remotePatterns (modern & explicit)
-    remotePatterns: [
-      // Backend API images
-      {
-        protocol: "https",
-        hostname: process.env.NEXT_PUBLIC_BASE_HOSTNAME,
-        pathname: "/**",
-      },
-
-      // WordPress media
-      {
-        protocol: "https",
-        hostname: new URL(process.env.WORDPRESS_API_URL).hostname,
-        pathname: "/**",
-      },
-
-      // Gravatar (no resizing needed, but allowed)
-      {
-        protocol: "https",
-        hostname: "secure.gravatar.com",
-        pathname: "/avatar/**",
-      },
-    ],
-
-    // ✅ Cache optimized images aggressively
-    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
-
-    // ✅ Only generate modern formats
-    formats: ["image/webp"],
+   unoptimized: true,
   },
   async redirects() {
     return [
