@@ -34,7 +34,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Menu, Transition, Dialog } from "@headlessui/react";
 import Image from "next/image";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import axios from "axios";
