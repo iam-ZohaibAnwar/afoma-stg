@@ -101,12 +101,9 @@ module.exports = {
       // Tree shaking optimizations (production only to avoid breaking dev)
       if (!dev) {
         config.optimization.usedExports = true;
-        // Only disable side effects for specific packages, not globally
-        config.optimization.sideEffects = [
-          '*.css',
-          '*.scss',
-          '@fortawesome/**/*',
-        ];
+        // Use 'flag' mode - only respect package.json sideEffects field
+        // This is safer than true/false and won't break CSS/FontAwesome
+        config.optimization.sideEffects = 'flag';
       }
     }
     
