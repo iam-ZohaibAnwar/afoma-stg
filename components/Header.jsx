@@ -14,8 +14,6 @@ import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
 import { Fragment, useEffect, useState } from "react";
 import jwt from "jsonwebtoken";
 import WalletConnectButton from "@/components/WalletConnectButton/index.jsx";
-import { BSC } from "@thirdweb-dev/chains";
-import { ThirdwebProvider, useWallet } from "@thirdweb-dev/react";
 import { useSidebar } from "@/context/sidebarContext";
 import NotificationDropdown from "./NotificationDropdown";
 import { initSocket  } from "../utils/socket";

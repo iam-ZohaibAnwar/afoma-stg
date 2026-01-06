@@ -37,12 +37,6 @@ import React, { Fragment, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
-import {
-  BrowserRouter as Router,
-  Route,
-  useLocation,
-  useParams,
-} from "react-router-dom";
 import { RWebShare } from "react-web-share";
 import { getAllCategory, getAllPostsForHome } from "@/lib/api";
 import { format, parseISO } from "date-fns";
@@ -78,7 +72,6 @@ export default function Product_Detailed({
   const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   const [sellerProducts, setSellerProducts] = useState(null);
-  const params = useParams();
   const router = useRouter();
   const [productCategory, setProductCategory] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);

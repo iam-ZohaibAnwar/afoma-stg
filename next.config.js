@@ -24,13 +24,49 @@ if (enforceWordpress && !process.env.WORDPRESS_API_URL) {
   `);
 }
 
+let wordpressHostname = null;
+try {
+  wordpressHostname = process.env.WORDPRESS_API_URL
+    ? new URL(process.env.WORDPRESS_API_URL).hostname
+    : null;
+} catch (e) {
+  wordpressHostname = null;
+}
+
 module.exports = {
   reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
-images: {
-   unoptimized: true,
+  images: {
+    // Re-enable Next.js image optimization (big LCP win).
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "api.afomamarketplace.com",
+        pathname: "/**",
+      },
+      // Allow WP-hosted images when WP is configured.
+      ...(wordpressHostname
+        ? [
+            {
+              protocol: "https",
+              hostname: wordpressHostname,
+              pathname: "/**",
+            },
+          ]
+        : []),
+      {
+        protocol: "https",
+        hostname: "afomamarketplace.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "www.afomamarketplace.com",
+        pathname: "/**",
+      },
+    ],
   },
   async redirects() {
     return [
