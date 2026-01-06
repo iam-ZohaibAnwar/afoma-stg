@@ -39,7 +39,6 @@
     "formik": "^2.4.3",
     "jose": "^5.9.6",
     "js-cookie": "^3.0.5",
-    "jsonwebtoken": "^8.5.1",
     "jspdf": "^2.5.2",
     "next": "15.4.8",
     "postcss": "8.4.29",

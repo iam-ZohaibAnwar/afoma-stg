@@ -8,7 +8,6 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import jwt from "jsonwebtoken";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

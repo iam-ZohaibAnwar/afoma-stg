@@ -5,11 +5,11 @@ import AdminProductSidebar from "./AdminProductSidebar";
 import Auth from "./Auth";
 import SellerInfoHeader from "./SellerInfoHeader";
 import SellerSidebar from "./SellerSidebar";
-import jwt from "jsonwebtoken";
 import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
 import AffiliateSidebar from "./AffiliateSidebar";
 import AffiliateInfoHeader from "./AffiliateHeaderInfo";
 import { useSidebar } from "@/context/sidebarContext";
+import { decodeJwtPayload, isJwtExpired } from "@/utils/jwtLite";
 
 const Layout = ({ children, userType }) => {
   const [loading, setLoading] = useState(false);
@@ -21,13 +21,13 @@ const Layout = ({ children, userType }) => {
   useEffect(() => {
     setLoading(true);
     const userData = JSON.parse(localStorage.getItem("user"));
-    let decoded = {}
-    if(userData && userData.accessToken){
-      try{
-        decoded = jwt.verify(userData.accessToken, process.env.NEXT_PUBLIC_ACCESS_KEY);
-      }catch(err){
-        clearThirdWebAuthTokens()
-        window.location.href = "/sign-in"
+    let decoded = {};
+    if (userData && userData.accessToken) {
+      decoded = decodeJwtPayload(userData.accessToken) || {};
+      if (isJwtExpired(decoded)) {
+        clearThirdWebAuthTokens();
+        window.location.href = "/sign-in";
+        return;
       }
     }
     setUserRole(decoded?.role);

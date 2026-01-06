@@ -12,11 +12,10 @@ import { useRouter } from "next/router";
 import React from "react";
 import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
 import { Fragment, useEffect, useState } from "react";
-import jwt from "jsonwebtoken";
 import WalletConnectButton from "@/components/WalletConnectButton/index.jsx";
 import { useSidebar } from "@/context/sidebarContext";
 import NotificationDropdown from "./NotificationDropdown";
-import { initSocket  } from "../utils/socket";
+import { decodeJwtPayload, isJwtExpired } from "@/utils/jwtLite";
 
 const Header = ({ cart, addToCart  }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,22 +45,46 @@ const Header = ({ cart, addToCart  }) => {
 
   useEffect(() => {
     if (!userId) return;
-    let socket = initSocket(userId);
-    // Join personal room
-    socket.emit("join", { userId });
+    let socket;
+    let cancelled = false;
 
-    // Get initial unread count
-    socket.emit("get_unread_total", { userId }, (res) => {
-      if (res?.total !== undefined) setUnread(res.total);
-    });
+    const setupSocket = async () => {
+      try {
+        // Lazy-load socket.io-client bundle only for signed-in users.
+        const mod = await import("../utils/socket");
+        if (cancelled) return;
 
-    // Listen for live updates
-    socket.on("unread_total", ({ total }) => {
-      setUnread(total);
-    });
+        socket = mod.initSocket(userId);
+        if (!socket) return;
+
+        // Join personal room
+        socket.emit("join", { userId });
+
+        // Get initial unread count
+        socket.emit("get_unread_total", { userId }, (res) => {
+          if (res?.total !== undefined) setUnread(res.total);
+        });
+
+        // Listen for live updates
+        socket.on("unread_total", ({ total }) => {
+          setUnread(total);
+        });
+      } catch {
+        // ignore socket failures
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(() => setupSocket());
+      } else {
+        setTimeout(() => setupSocket(), 0);
+      }
+    }
 
     return () => {
-      socket.off("unread_total");
+      cancelled = true;
+      if (socket) socket.off("unread_total");
     };
   }, [userId]);
 
@@ -77,13 +100,13 @@ const Header = ({ cart, addToCart  }) => {
   useEffect(() => {
     setLoading(true);
     const userData = JSON.parse(localStorage.getItem("user"));
-    let decoded = {}
-    if(userData && userData.accessToken){
-      try{
-        decoded = jwt.verify(userData.accessToken, process.env.NEXT_PUBLIC_ACCESS_KEY);
-      }catch(err){
-        clearThirdWebAuthTokens()
-        window.location.href = "/sign-in"
+    let decoded = {};
+    if (userData && userData.accessToken) {
+      decoded = decodeJwtPayload(userData.accessToken) || {};
+      if (isJwtExpired(decoded)) {
+        clearThirdWebAuthTokens();
+        window.location.href = "/sign-in";
+        return;
       }
     }
     if (router.isReady && userData) {

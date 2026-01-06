@@ -9,7 +9,8 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import jwt from "jsonwebtoken";
+import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
+import { decodeJwtPayload, isJwtExpired } from "@/utils/jwtLite";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 
@@ -27,13 +28,13 @@ const Downloads = ({ cart, addToCart }) => {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if(userData && userData.accessToken){
-      try{
-        const decoded = jwt.verify(userData.accessToken, process.env.NEXT_PUBLIC_ACCESS_KEY);
-        userData.userRole = decoded.role
-      }catch(err){
-        clearThirdWebAuthTokens()
-        window.location.href = "/sign-in"
+      const decoded = decodeJwtPayload(userData.accessToken);
+      if (!decoded || isJwtExpired(decoded)) {
+        clearThirdWebAuthTokens();
+        window.location.href = "/sign-in";
+        return;
       }
+      userData.userRole = decoded.role
 
     }
     if (userData?.userRole === "customer") {

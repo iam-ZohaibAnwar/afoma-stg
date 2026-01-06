@@ -8,7 +8,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import jwt from "jsonwebtoken";
+// removed jsonwebtoken (client bundle bloat)
 import { Menu, Transition } from "@headlessui/react";
 
 
