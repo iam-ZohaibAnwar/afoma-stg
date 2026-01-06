@@ -113,37 +113,7 @@ module.exports = {
   // Image optimization settings
   images: {
     // Re-enable Next.js image optimization (big LCP win)
-    formats: ['image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "api.afomamarketplace.com",
-        pathname: "/**",
-      },
-      // Allow WP-hosted images when WP is configured
-      ...(wordpressHostname
-        ? [
-            {
-              protocol: "https",
-              hostname: wordpressHostname,
-              pathname: "/**",
-            },
-          ]
-        : []),
-      {
-        protocol: "https",
-        hostname: "afomamarketplace.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "www.afomamarketplace.com",
-        pathname: "/**",
-      },
-    ],
+    unoptimized: true,
   },
   
   async redirects() {
