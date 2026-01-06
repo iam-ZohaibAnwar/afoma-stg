@@ -1066,11 +1066,15 @@ function ProductDetail({ product, pageData }) {
                     {product && product?.images ? (
                       product?.images.map((image, index) => (
                         <div key={index}>
-                          <img
+                          <Image
                             src={image.imageUrl}
                             alt={image.altText || "product_image"}
-                            className="border-[1px] hover:border-primary h-[84px] w-[76px] rounded object-cover"
+                            width={76}
+                            height={84}
+                            className="border-[1px] hover:border-primary h-[84px] w-[76px] rounded object-cover cursor-pointer"
                             onClick={() => handleImageClick(image)}
+                            loading="lazy"
+                            unoptimized={image.imageUrl?.includes("http")}
                           />
                         </div>
                       ))
@@ -1285,13 +1289,17 @@ function ProductDetail({ product, pageData }) {
                               product?.images &&
                               product?.images.map((image, index) => (
                                 <div key={index}>
-                                  <img
+                                  <Image
                                     src={image.imageUrl}
                                     alt={image.altText}
-                                    className="h-[285px] w-[285px] md:w-[380px] md:h-[380px]  object-cover z-10 rounded"
+                                    width={380}
+                                    height={380}
+                                    className="h-[285px] w-[285px] md:w-[380px] md:h-[380px] object-cover z-10 rounded cursor-pointer"
                                     onClick={() =>
                                       handleImageClick(image, true, index)
                                     }
+                                    loading="lazy"
+                                    unoptimized={image.imageUrl?.includes("http")}
                                   />
                                 </div>
                               ))}

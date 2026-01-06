@@ -1,8 +1,11 @@
-import Faq from "@/components/Faq";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import ProductCardComponent from "@/components/ProductCard";
-import StarRating from "@/components/StarRating";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Faq = dynamic(() => import("@/components/Faq"), { ssr: false });
+const ProductCardComponent = dynamic(() => import("@/components/ProductCard"), { ssr: false });
+const StarRating = dynamic(() => import("@/components/StarRating"), { ssr: false });
 import {
   faArrowLeft,
   faArrowRight,
@@ -31,9 +34,15 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
+
+// Lazy load Slider
+const Slider = dynamic(() => {
+  if (typeof window !== "undefined") {
+    require("slick-carousel/slick/slick.css");
+    require("slick-carousel/slick/slick-theme.css");
+  }
+  return import("react-slick");
+}, { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 
@@ -786,11 +795,15 @@ function ProductDetail({ cart, addToCart, product }) {
                           product.images &&
                           product.images.map((image, index) => (
                             <div key={index}>
-                              <img
+                              <Image
                                 src={image.imageUrl}
                                 alt={image.altText}
-                                className="h-[285px] w-[285px] md:w-[380px] md:h-[380px]  object-cover z-10 rounded"
+                                width={380}
+                                height={380}
+                                className="h-[285px] w-[285px] md:w-[380px] md:h-[380px] object-cover z-10 rounded cursor-pointer"
                                 onClick={() => handleImageClick(image)}
+                                loading="lazy"
+                                unoptimized={image.imageUrl?.includes("http")}
                               />
                             </div>
                           ))}

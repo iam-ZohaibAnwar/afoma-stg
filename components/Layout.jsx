@@ -1,37 +1,57 @@
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import AdminInfoHeader from "./AdminInfoHeader";
-import AdminProductSidebar from "./AdminProductSidebar";
+import { useEffect, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Auth from "./Auth";
-import SellerInfoHeader from "./SellerInfoHeader";
-import SellerSidebar from "./SellerSidebar";
 import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
-import AffiliateSidebar from "./AffiliateSidebar";
-import AffiliateInfoHeader from "./AffiliateHeaderInfo";
 import { useSidebar } from "@/context/sidebarContext";
 import { decodeJwtPayload, isJwtExpired } from "@/utils/jwtLite";
 
+// Lazy load heavy sidebar and header components
+const AdminProductSidebar = dynamic(() => import("./AdminProductSidebar"), { ssr: false });
+const AdminInfoHeader = dynamic(() => import("./AdminInfoHeader"), { ssr: false });
+const SellerSidebar = dynamic(() => import("./SellerSidebar"), { ssr: false });
+const SellerInfoHeader = dynamic(() => import("./SellerInfoHeader"), { ssr: false });
+const AffiliateSidebar = dynamic(() => import("./AffiliateSidebar"), { ssr: false });
+const AffiliateInfoHeader = dynamic(() => import("./AffiliateHeaderInfo"), { ssr: false });
+
 const Layout = ({ children, userType }) => {
-  const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState();
-  // const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
   const { sidebarOpen, setSidebarOpen } = useSidebar();
 
-
   useEffect(() => {
-    setLoading(true);
-    const userData = JSON.parse(localStorage.getItem("user"));
-    let decoded = {};
-    if (userData && userData.accessToken) {
-      decoded = decodeJwtPayload(userData.accessToken) || {};
-      if (isJwtExpired(decoded)) {
-        clearThirdWebAuthTokens();
-        window.location.href = "/sign-in";
-        return;
+    // Use requestIdleCallback or setTimeout to avoid blocking render
+    const checkAuth = () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem("user"));
+        let decoded = {};
+        if (userData && userData.accessToken) {
+          decoded = decodeJwtPayload(userData.accessToken) || {};
+          if (isJwtExpired(decoded)) {
+            clearThirdWebAuthTokens();
+            window.location.href = "/sign-in";
+            return;
+          }
+        }
+        setUserRole(decoded?.role || null);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        setUserRole(null);
+      } finally {
+        setLoading(false);
       }
+    };
+
+    // Non-blocking auth check
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(checkAuth, { timeout: 100 });
+      } else {
+        setTimeout(checkAuth, 0);
+      }
+    } else {
+      setLoading(false);
     }
-    setUserRole(decoded?.role);
-    setLoading(false);
   }, []);
 
   return (
@@ -39,7 +59,7 @@ const Layout = ({ children, userType }) => {
       {loading ? (
         "Loading..."
       ) : (
-        userType!=="from-settings"?
+        userType !== "from-settings" ? (
         <div className="flex h-screen overflow-hidden">
           {userRole === "admin" && (
             <>
@@ -97,10 +117,12 @@ const Layout = ({ children, userType }) => {
               </button>
             </div>
           )}
-        </div>:
+        </div>
+        ) : (
         <div>
           {children}
         </div>
+        )
       )}
     </Auth>
   );

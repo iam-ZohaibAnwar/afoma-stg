@@ -1,5 +1,4 @@
-import Footer2 from "@/components/Footer2";
-import Miniheader from "@/components/Miniheader";
+import dynamic from "next/dynamic";
 import { faAngleRight, faEye } from "@fortawesome/pro-light-svg-icons";
 import {
   faAngleDown,
@@ -17,15 +16,20 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
-import Footer from "@/components/Footer";
-import FacebookPixel from "@/components/FacebookPixel";
-import GuestFormModal from "@/components/ContinueAsGuestModal";
-import SignInPromptModal from "@/components/signInPromptModal";
 import { getRecaptchaToken } from "@/utils/recaptcha";
 import { reCaptchaVerification, sendOTP, verifyOTP } from "@/lib/api";
 import countryData from "country-data";
 import { pushEventBeginCheckout, pushEventViewToCart } from "@/utils/dataLayer";
 import { useCart } from "@/context/CartProvider";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
+const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
+const FacebookPixel = dynamic(() => import("@/components/FacebookPixel"), { ssr: false });
+const GuestFormModal = dynamic(() => import("@/components/ContinueAsGuestModal"), { ssr: false });
+const SignInPromptModal = dynamic(() => import("@/components/signInPromptModal"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
+import { memo } from "react";
 
-const DiscountedItemCard = ({ product, userCurrency, userCountry }) => {
+const DiscountedItemCard = memo(({ product, userCurrency, userCountry }) => {
   const router = useRouter();
   const formatPrice = (price) => {
     const numericPrice = Number(price); // Ensure it's a number
@@ -250,6 +251,8 @@ const DiscountedItemCard = ({ product, userCurrency, userCountry }) => {
       {/* <button className="buttonprimary mt-5">Add to Cart</button> */}
     </div>
   );
-};
+});
+
+DiscountedItemCard.displayName = "DiscountedItemCard";
 
 export default DiscountedItemCard;

@@ -38,6 +38,58 @@ module.exports = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Increase build timeout
+  staticPageGenerationTimeout: 300,
+  // Optimize webpack for faster builds
+  webpack: (config, { isServer, dev }) => {
+    // Only apply aggressive splitting in production
+    if (!isServer && !dev) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        maxInitialRequests: 25,
+        minSize: 20000,
+        cacheGroups: {
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+          vendors: false,
+          // Vendor chunk for large libraries
+          vendor: {
+            name: 'vendor',
+            chunks: 'all',
+            test: /[\\/]node_modules[\\/]/,
+            priority: 20,
+            minChunks: 1,
+            maxSize: 244000, // 244kb
+          },
+          // FontAwesome chunk
+          fontawesome: {
+            name: 'fontawesome',
+            test: /[\\/]node_modules[\\/]@fortawesome[\\/]/,
+            chunks: 'all',
+            priority: 30,
+            enforce: true,
+          },
+          // React/Next chunks
+          react: {
+            name: 'react',
+            test: /[\\/]node_modules[\\/](react|react-dom|next|scheduler)[\\/]/,
+            chunks: 'all',
+            priority: 40,
+            enforce: true,
+          },
+        },
+      };
+    }
+    
+    // Optimize build performance
+    config.optimization.usedExports = true;
+    config.optimization.sideEffects = false;
+    
+    return config;
+  },
   images: {
     // Re-enable Next.js image optimization (big LCP win).
     remotePatterns: [
@@ -81,5 +133,13 @@ module.exports = {
         permanent: true,
       },
     ];
+  },
+  // Experimental features for faster builds
+  experimental: {
+    optimizeCss: true,
+  },
+  // Compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
   },
 };

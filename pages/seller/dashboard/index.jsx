@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+// Dashboard components are already lightweight, no need for dynamic imports here
 import {
   faBagShopping,
   faChartColumn,

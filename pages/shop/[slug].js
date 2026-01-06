@@ -1,5 +1,8 @@
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
 import { calculateSurcharge } from "@/utils/pricingUtils";
 import { faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck } from "@fortawesome/pro-regular-svg-icons";
