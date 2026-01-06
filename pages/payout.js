@@ -1,10 +1,13 @@
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import axios from "axios";
 import toast from "react-hot-toast";
-import Footer from "@/components/Footer";
-import Miniheader from "@/components/Miniheader";
+
+// Lazy load heavy components
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
 
 // Payment method configuration
 const paymentOptions = [

@@ -1,5 +1,7 @@
-import Layout from "@/components/Layout";
-import SellerDetail from "@/components/SellerDetail";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const SellerDetail = dynamic(() => import("@/components/SellerDetail"), { ssr: false });
 import { faAngleLeft } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";

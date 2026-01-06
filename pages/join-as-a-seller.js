@@ -1,5 +1,8 @@
-import Footer from "@/components/Footer";
-import Footer2 from "@/components/Footer2";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
 import { faAngleRight } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Noto_Serif } from "next/font/google";

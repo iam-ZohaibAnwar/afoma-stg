@@ -1,7 +1,9 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import Select from "react-select";
-import Modal from "@/components/ConfigModal"; // Assumes a Modal component exists
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const Modal = dynamic(() => import("@/components/ConfigModal"), { ssr: false }); // Assumes a Modal component exists
 import countryData from "country-data";
 import { useEffect } from "react";
 import axios from "axios";

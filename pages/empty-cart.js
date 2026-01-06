@@ -1,10 +1,13 @@
-import Footer2 from "@/components/Footer2";
-import Miniheader from "@/components/Miniheader";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import React from "react";
 //import { Noto_Serif } from "next/font/google";
 import Head from "next/head";
-import Footer from "@/components/Footer";
+
+// Lazy load heavy components
+const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

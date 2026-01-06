@@ -1,5 +1,7 @@
 import dynamic from "next/dynamic";
-import Layout from "@/components/Layout";
+
+// Lazy load heavy components
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 
 // Lazy load heavy chart component
 const ChartPieAdmin = dynamic(() => import("@/components/ChartPieAdmin"), { ssr: false });

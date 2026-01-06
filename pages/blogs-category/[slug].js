@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import {
   getAllCategory,
@@ -6,11 +7,13 @@ import {
 } from "../../lib/api";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import Header from "@/components/Header";
 import Image from "next/image";
 import { format, parseISO } from "date-fns";
-import Footer from "@/components/Footer";
-import Waitlist from "@/components/Waitlist";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Waitlist = dynamic(() => import("@/components/Waitlist"), { ssr: false });
 //import { Noto_Serif } from "next/font/google";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });

@@ -4,7 +4,9 @@ import Link from "next/link";
 import React, { useState } from "react";
 //import { Noto_Serif } from "next/font/google";
 import Image from "next/image";
-import Footer2 from "@/components/Footer2";
+import dynamic from "next/dynamic";
+
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
 import Head from "next/head";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });

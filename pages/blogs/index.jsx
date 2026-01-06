@@ -1,15 +1,18 @@
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import { getAllPostsForHome, getAllCategory } from "../../lib/api";
 import Link from "next/link";
 import Image from "next/image";
 import { format, parseISO } from "date-fns";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { useRouter } from "next/router";
-import Waitlist from "@/components/Waitlist";
 //import { Noto_Serif } from "next/font/google";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleRight } from "@fortawesome/pro-regular-svg-icons";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Waitlist = dynamic(() => import("@/components/Waitlist"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

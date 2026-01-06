@@ -1,10 +1,13 @@
-import ChatLayout from "../../components/ChatLayout";
+import dynamic from "next/dynamic";
 import { useEffect, useState, useCallback } from "react";
 import { subscribePush } from "../../utils/push";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { initSocket } from "../../utils/socket";
-import Header from "../../components/Header";
+
+// Lazy load heavy components
+const ChatLayout = dynamic(() => import("../../components/ChatLayout"), { ssr: false });
+const Header = dynamic(() => import("../../components/Header"), { ssr: true });
 
 const ChatPage = () => {
   const router = useRouter();

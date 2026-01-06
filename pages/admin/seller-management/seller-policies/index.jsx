@@ -1,5 +1,4 @@
-import BannerImageCropperModal from "@/components/BannerImageCropperModal";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import { faAngleLeft, faTrashCan } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
@@ -11,7 +10,10 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { object, string } from "yup";
 import Select from "react-select";
-import AdminSellerDetail from "@/components/AdminSellerDetail";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const BannerImageCropperModal = dynamic(() => import("@/components/BannerImageCropperModal"), { ssr: false });
+const AdminSellerDetail = dynamic(() => import("@/components/AdminSellerDetail"), { ssr: false });
 
 
 const Policies = () => {

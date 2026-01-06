@@ -1,5 +1,7 @@
-import Layout from "@/components/Layout";
-import ReviewModal from "@/components/ReviewModal";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const ReviewModal = dynamic(() => import("@/components/ReviewModal"), { ssr: false });
 import { faStar } from "@fortawesome/free-solid-svg-icons";
 import {
   faAngleLeft,

@@ -1,5 +1,7 @@
-import Layout from "@/components/Layout";
-// Dashboard components are already lightweight, no need for dynamic imports here
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import {
   faBagShopping,
   faChartColumn,

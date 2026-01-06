@@ -1,10 +1,12 @@
-import Miniheader from "@/components/Miniheader";
+import dynamic from "next/dynamic";
 import { faAngleRight } from "@fortawesome/pro-light-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import React from "react";
 //import { Noto_Serif } from "next/font/google";
-import Footer2 from "@/components/Footer2";
+
+const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
 import { Field, Form, Formik } from "formik";
 import Image from "next/image";
 import Head from "next/head";

@@ -1,12 +1,14 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import axios from "axios";
 //import { Noto_Serif } from "next/font/google";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
-import QuillEditor from "@/components/QuillEditor";
 import toast from "react-hot-toast";
-import ImageUploader from "@/components/UploadImages";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const QuillEditor = dynamic(() => import("@/components/QuillEditor"), { ssr: false });
+const ImageUploader = dynamic(() => import("@/components/UploadImages"), { ssr: false });
 import AdminSellerMgmt from "../seller-management";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });

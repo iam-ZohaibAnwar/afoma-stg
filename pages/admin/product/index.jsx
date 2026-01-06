@@ -1,8 +1,11 @@
-import ConfirmModal from "@/components/ConfirmModal";
-import Layout from "@/components/Layout";
-import { PhysicalProductTypeModal } from "@/components/PhysicalProductTypeModal";
-import ProductKeywordModal from "@/components/ProductKeywordModal";
-import { ProductTypeModal } from "@/components/ProductTypeModal";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const ConfirmModal = dynamic(() => import("@/components/ConfirmModal"), { ssr: false });
+const PhysicalProductTypeModal = dynamic(() => import("@/components/PhysicalProductTypeModal").then(mod => ({ default: mod.PhysicalProductTypeModal })), { ssr: false });
+const ProductKeywordModal = dynamic(() => import("@/components/ProductKeywordModal"), { ssr: false });
+const ProductTypeModal = dynamic(() => import("@/components/ProductTypeModal").then(mod => ({ default: mod.ProductTypeModal })), { ssr: false });
 import {
   faAngleDown,
   faAngleLeft,

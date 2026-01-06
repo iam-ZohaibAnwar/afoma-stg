@@ -1,5 +1,8 @@
-import ChartPieAdmin from "@/components/ChartPieAdmin";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const ChartPieAdmin = dynamic(() => import("@/components/ChartPieAdmin"), { ssr: false });
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import {
   faArrowTrendUp,

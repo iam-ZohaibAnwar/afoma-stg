@@ -1,7 +1,4 @@
-import FacebookPixel from "@/components/FacebookPixel";
-import Footer from "@/components/Footer";
-import Footer2 from "@/components/Footer2";
-import Miniheader from "@/components/Miniheader";
+import dynamic from "next/dynamic";
 import { faAngleRight } from "@fortawesome/pro-light-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
@@ -14,8 +11,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import "react-phone-input-2/lib/style.css";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import StripeComponent from "@/components/Stripe";
-import ApplePay from "@/components/ApplePay";
+
+const FacebookPixel = dynamic(() => import("@/components/FacebookPixel"), { ssr: false });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
+const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
+const StripeComponent = dynamic(() => import("@/components/Stripe"), { ssr: false });
+const ApplePay = dynamic(() => import("@/components/ApplePay"), { ssr: false });
 import { loadStripe } from '@stripe/stripe-js';
 import { pushEventBeginCheckout, pushEventPaymentInfo, pushEventPurchase } from "@/utils/dataLayer";
 

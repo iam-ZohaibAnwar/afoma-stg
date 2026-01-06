@@ -4,7 +4,9 @@ import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Head from "next/head";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import toast from "react-hot-toast";
 //import { Noto_Serif } from "next/font/google";
 

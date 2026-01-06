@@ -6,7 +6,9 @@ import React, { useEffect, useState } from "react";
 import { faCircleInfo } from "@fortawesome/pro-light-svg-icons";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import Select from "react-select";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import toast from "react-hot-toast";
 import Head from "next/head";
 

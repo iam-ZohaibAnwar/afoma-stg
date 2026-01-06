@@ -1,5 +1,7 @@
-import GenerateAiHarmonizedCode from "@/components/GenerateAiHarmonizedCode";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const GenerateAiHarmonizedCode = dynamic(() => import("@/components/GenerateAiHarmonizedCode"), { ssr: false });
 import { inventoryList } from "@/lib/select-option";
 import { faImage } from "@fortawesome/pro-light-svg-icons";
 import { faAngleLeft, faCircleVideo } from "@fortawesome/pro-regular-svg-icons";
