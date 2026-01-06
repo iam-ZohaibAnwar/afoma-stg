@@ -1,4 +1,5 @@
-import dynamic from "next/dynamic";
+import Footer2 from "@/components/Footer2";
+import Miniheader from "@/components/Miniheader";
 import { faAngleRight, faEye } from "@fortawesome/pro-light-svg-icons";
 import {
   faAngleDown,
@@ -16,32 +17,22 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import Select from "react-select";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
+import Footer from "@/components/Footer";
+import FacebookPixel from "@/components/FacebookPixel";
+import GuestFormModal from "@/components/ContinueAsGuestModal";
+import SignInPromptModal from "@/components/signInPromptModal";
 import { getRecaptchaToken } from "@/utils/recaptcha";
 import { reCaptchaVerification, sendOTP, verifyOTP } from "@/lib/api";
 import countryData from "country-data";
 import { pushEventBeginCheckout, pushEventViewToCart } from "@/utils/dataLayer";
 import { useCart } from "@/context/CartProvider";
 
-// Lazy load heavy components
-const Header = dynamic(() => import("@/components/Header"), { ssr: true });
-const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
-const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
-const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
-const FacebookPixel = dynamic(() => import("@/components/FacebookPixel"), { ssr: false });
-const GuestFormModal = dynamic(() => import("@/components/ContinueAsGuestModal"), { ssr: false });
-const SignInPromptModal = dynamic(() => import("@/components/signInPromptModal"), { ssr: false });
-
 //const noto = Noto_Serif({ subsets: ["latin"] });
 
-const Cart = ({
-
-  setCart,
-  clearCart,
-  setSubTotal,
-  saveCart,
-}) => {
-  const {cart, addToCart, removeFromCart, deleteFromCart, subTotal, totalShippingRate, fetchedShippingRate, userInfoStored} = useCart();
-  const [loading, setLoading] = useState(false); // Start as false - non-blocking
+const Cart = ({}) => {
+  const {cart, setCart, addToCart, removeFromCart, deleteFromCart, subTotal, totalShippingRate, fetchedShippingRate, userInfoStored} = useCart();
+  // Removed console.logs for production optimization
+  const [loading, setLoading] = useState(true);
   const [rateOptionsError, setRateOptionsError] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [updatedCart, setUpdatedCart] = useState(undefined);
@@ -69,15 +60,17 @@ const Cart = ({
     }).format(numericPrice);
   }, []);
 
-  const getRateOptions2 = async (carts) => {
+  const getRateOptions2 = useCallback(async (carts) => {
+    if (typeof window === 'undefined') return;
+    
     let isError = false;
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("user") || "null");
     if(user) {
       setIsUserInfo(false);
       setIsLoggedIn(true);
     }
     const selectedAddress = JSON.parse(
-      localStorage.getItem("selected-delivery-address")
+      localStorage.getItem("selected-delivery-address") || "null"
     );
     let userInfo = {};
 
@@ -288,9 +281,12 @@ const Cart = ({
         cart[cartItem]?.selectedVariations
       );
     });
-  }
+  }, [addToCart, cart]);
 
-  const formatCartGrouping = () => {
+  // Memoize formatCartGrouping - expensive operation
+  const formatCartGrouping = useMemo(() => {
+    if (!cart || Object.keys(cart).length === 0) return [];
+    
     const groupedBySeller = Object.values(cart).reduce((acc, order) => {
       if (order.productData) {
         const seller = order.productData.seller;
@@ -311,9 +307,6 @@ const Cart = ({
             transitDays: undefined,
           });
         }
-        // if(userInfoStored.currency && !isNaN(parseFloat(order.totalAmount)) && !isNaN(parseFloat(userInfoStored.currencyRate))){
-        //   order.productData.surTotalAmount = parseFloat((parseFloat(order.totalAmount) * parseFloat(userInfoStored.currencyRate)).toFixed(2))
-        // }
         // Add the product to the corresponding seller's cart
         acc[sellerIndex === -1 ? acc.length - 1 : sellerIndex].cart.push({
           orderQuantiy: order.orderQuantiy,
@@ -341,17 +334,17 @@ const Cart = ({
         }
         return acc;
       }
+      return acc;
     }, []);
     return groupedBySeller;
-  };
+  }, [cart]);
 
   const formatCartGroupingGetRate = useCallback(async (isCallingGetRate) => {
     setApiError(undefined);
     setRateOptionsError(false);
-    const groupedBySeller = formatCartGrouping();
+    const groupedBySeller = formatCartGrouping;
 
     if (groupedBySeller && groupedBySeller.length && isCallingGetRate) {
-      // Non-blocking loading - doesn't prevent route changes
       setLoading(true);
       try {
         for (const group of groupedBySeller) {
@@ -375,24 +368,25 @@ const Cart = ({
       for (const group of groupedBySeller) {
         loadCartOnRefresh(group.cart);
       }
-      // Removed setLoading(false) - no blocking state needed
+      setLoading(false);
       setUpdatedCart(groupedBySeller);
     }
   }, [formatCartGrouping, getRateOptions2, loadCartOnRefresh]);
 
+  // Memoize total calculation
+  const cartTotal = useMemo(() => {
+    if (subTotal <= 0) return 0;
+    const shipping = parseFloat(fetchedShippingRate ?? totalShippingRate);
+    const subtotal = parseFloat(subTotal);
+    const stripeFee = (subtotal + shipping) * 0.03 + 0.30;
+    return subtotal + shipping + stripeFee;
+  }, [subTotal, fetchedShippingRate, totalShippingRate]);
+
   useEffect(() => {
-    if (subTotal > 0) {
-      const shipping = parseFloat(fetchedShippingRate ?? totalShippingRate);
-      const subtotal = parseFloat(subTotal);
-
-      // Stripe fee = (subtotal + shipping) * 0.03 + 0.30
-      const stripeFee = (subtotal + shipping) * 0.03 + 0.30;
-
-      const total = subtotal + shipping + stripeFee;
-      console.log(total)
-      pushEventViewToCart(cart, total)
+    if (cartTotal > 0) {
+      pushEventViewToCart(cart, cartTotal);
     }
-  }, [subTotal])
+  }, [cartTotal, cart]);
 
   const addToCart2 = (
     productId,
@@ -428,10 +422,13 @@ const Cart = ({
   };
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
+    if (typeof window === 'undefined') return;
+    
+    const userData = JSON.parse(localStorage.getItem("user") || "null");
     if (userData) setIsUserInfo(false);
-    if(userData && userData.userId) setUser(userData)
-    const appliedCoupon = JSON.parse(localStorage.getItem("appliedCoupon"));
+    if(userData && userData.userId) setUser(userData);
+    
+    const appliedCoupon = JSON.parse(localStorage.getItem("appliedCoupon") || "null");
     if (appliedCoupon && appliedCoupon.couponCode) {
       setAppliedCoupon(appliedCoupon);
       setCouponApplied(true);
@@ -444,15 +441,22 @@ const Cart = ({
       cartUpdatedInternally.current = false;
       return; // don't call fetchData
     }
-    fetchData()
-    const coupon = JSON.parse(localStorage.getItem("applyCoupon"))
-    if(coupon) applyCode({code: coupon.couponCode})
-    localStorage.removeItem("applyCoupon")
-  }, [cart]);
+
+    // Only call fetchData if cart actually changed externally
+    if (Object.keys(cart).length > 0) {
+      fetchData();
+    }
+
+    const coupon = JSON.parse(localStorage.getItem("applyCoupon") || "null");
+    if(coupon) applyCode({code: coupon.couponCode});
+    localStorage.removeItem("applyCoupon");
+  }, [cart, fetchData]);
 
   
   const fetchData = useCallback(async () => {
-    const userData = JSON.parse(localStorage.getItem("user"));
+    if (typeof window === 'undefined') return;
+    
+    const userData = JSON.parse(localStorage.getItem("user") || "null");
     if(userData) {
       setIsUserInfo(false);
       setIsLoggedIn(true);
@@ -460,27 +464,14 @@ const Cart = ({
     if (userData) {
       try {
         formatCartGroupingGetRate(true);
-        // const response = await axios
-        //   .create({
-        //     headers: {
-        //       "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-        //       Authorization: `Bearer ${userData.accessToken}`,
-        //     },
-        //   })
-        //   .get(`${process.env.NEXT_PUBLIC_BASE_URL}/users/${userData.userId}`);
-        // if (response && response.data) {
-          
-        // }
       } catch (error) {
-        // setIsLoggedIn(false);
         console.error("Error fetching data:", error);
       }
     } else {
-      // setIsLoggedIn(false);
-      // Removed setLoading(true) - non-blocking, allows instant route changes
+      setLoading(true);
       formatCartGroupingGetRate(false);
     }
-  });
+  }, [formatCartGroupingGetRate]);
 
   useEffect(() => {
     // Set default shipping option for each cart item if not already set
@@ -516,8 +507,10 @@ const Cart = ({
     code: "",
   };
 
-  const applyCode = async (values) => {
-    const user = JSON.parse(localStorage.getItem("user"));
+  const applyCode = useCallback(async (values) => {
+    if (typeof window === 'undefined') return;
+    
+    const user = JSON.parse(localStorage.getItem("user") || "null");
     if (values && values.code && user) {
       try {
         const data = {
@@ -545,10 +538,10 @@ const Cart = ({
           let updatedCart = updateOrderData(response.data.updatedOrder.clonedCart);
           const subTotal = localStorage.getItem("subTotal")
           localStorage.setItem("oldSubTotal", subTotal)
-          cartUpdatedInternally.current = false;
+          cartUpdatedInternally.current = true;
           localStorage.setItem("cart", JSON.stringify(updatedCart));
           setCart(updatedCart);
-          cartUpdatedInternally.current = false;
+          cartUpdatedInternally.current = true;
           localStorage.setItem(
             "appliedCoupon",
             JSON.stringify(response.data.updatedOrder.coupon)
@@ -568,18 +561,19 @@ const Cart = ({
     }
   };
 
-  function updateOrderData(orderData) {
-    for (const key in orderData) {
-      if (orderData.hasOwnProperty(key)) {
-        orderData[key].totalAmount = orderData[key].totalAmount
-          ? orderData[key].totalAmount
-          : parseFloat(orderData[key].basePrice);
+  const updateOrderData = useCallback((orderData) => {
+    const updated = { ...orderData };
+    for (const key in updated) {
+      if (updated.hasOwnProperty(key)) {
+        updated[key].totalAmount = updated[key].totalAmount
+          ? updated[key].totalAmount
+          : parseFloat(updated[key].basePrice);
       }
     }
-    return orderData;
-  }
+    return updated;
+  }, []);
 
-  const getProductImage = (productDetail) => {
+  const getProductImage = useCallback((productDetail) => {
     if (
       productDetail &&
       productDetail.productData &&
@@ -607,17 +601,18 @@ const Cart = ({
       }
       return productDetail.productData.images[0].imageUrl;
     }
-  };
+    return null;
+  }, []);
 
-  const handleCheckout = () => {
+  const handleCheckout = useCallback(() => {
     setIsUserInfo(true);
-  }
+  }, []);
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     setIsUserInfo(false);
     setOpenGuestForm(true);
     setShowGuestForm(true);
-  }
+  }, []);
 
   const handleGuestSubmit = async (values, { setSubmitting }) => {
     let user = {
@@ -653,16 +648,16 @@ const Cart = ({
         setOtpError(false);
       }
     }
-  };
+  }, [formatCartGroupingGetRate]);
 
-  const fetchCountryCode = (countryName) => {
+  const fetchCountryCode = useCallback((countryName) => {
     const countryInfo = countryData.countries.all.find(
       (c) => c.name === countryName
     );
     return countryInfo ? countryInfo.alpha2 : ""; // Use alpha2 for the country code
-  };
+  }, []);
 
-  const handleOtpChange = (e, index) => {
+  const handleOtpChange = useCallback((e, index) => {
     const value = e.target.value.replace(/\D/, "");
     if (!value) return;
     const newOtp = [...otp];
@@ -676,9 +671,9 @@ const Cart = ({
     if (newOtp.every(d => d?.length === 1)) {
       handleVerifyOtp(newOtp);
     }
-  };
+  }, [otp, handleVerifyOtp]);
 
-  const handleBackspace = (e, index) => {
+  const handleBackspace = useCallback((e, index) => {
     if (e.key === "Backspace") {
       e.preventDefault();
 
@@ -695,9 +690,9 @@ const Cart = ({
         setOtp(updatedOtp);
       }
     }
-  };
+  }, [otp]);
 
-  const handleVerifyOtp = async (newOtp = null) => {
+  const handleVerifyOtp = useCallback(async (newOtp = null) => {
     const otpArray = Array.isArray(newOtp) ? newOtp : Array.isArray(otp) ? otp : [];
     const finalOtp = otpArray.join("");
   
@@ -724,9 +719,9 @@ const Cart = ({
       console.error("OTP verification failed:", error);
       setOtpError(true);
     }
-  };
+  }, [otp, otpToken, formatCartGroupingGetRate]);
 
-  const handleOtpPaste = (e) => {
+  const handleOtpPaste = useCallback((e) => {
     e.preventDefault();
     const pasteData = e.clipboardData.getData("text").trim();
 
@@ -752,16 +747,15 @@ const Cart = ({
     if (digits.length === 6) {
       handleVerifyOtp(newOtp);
     }
-  };
+  }, [handleVerifyOtp]);
 
-
-  const onClose = () => {
+  const onClose = useCallback(() => {
     setOtpToken(null); // Hides the modal
     setOtp(["", "", "", "", "", ""]); // Optional: Clear the OTP fields too
     setOtpError(false); 
-  };
+  }, []);
 
-  const createGuestUser = async (user) => {
+  const createGuestUser = useCallback(async (user) => {
     try {
       const options = {
         method: "POST",
@@ -774,12 +768,13 @@ const Cart = ({
         headers: {
           "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
         },
+        timeout: 5000, // Fast timeout
       };
       await axios.request(options);
     } catch (err) {
-      console.log(err.message)
+      console.warn("Failed to create guest user:", err.message);
     }
-  }
+  }, []);
 
   return (
     <>
@@ -830,9 +825,9 @@ const Cart = ({
                   className="flex flex-col gap-6 lg:flex-row items-start"
                 >
                   <div className="w-full">
-                    {/* Remove blocking loading - render immediately */}
-                    <>
-                      {updatedCart.map((sellerCart) => (
+                    {!loading ? (
+                      <>
+                        {updatedCart.map((sellerCart) => (
                           <div
                             className="bg-orange-100 shadow-sm rounded-md px-[16px] py-[20px] mb-6"
                             key={sellerCart.id + sellerCart.storeTitle}
@@ -1346,6 +1341,7 @@ const Cart = ({
                                                             })
                                                         }
                                                         onChange={(selected) => {
+                                                          cartUpdatedInternally.current = true;
                                                           const selectedShipping =
                                                             groupCartItem.shippingOptions?.find(
                                                               (option) =>
@@ -1613,8 +1609,8 @@ const Cart = ({
                           <p>Item(s) total</p>
                           <p>
                             {
-                              // Remove blocking loading - show price immediately
-                              subTotal >= 0
+                              loading ? "..."
+                                : subTotal >= 0
                                   ? (() => {
                                       const rate = userInfoStored?.currencyRate || 1;
                                       const currency = userInfoStored?.currency || "CA$";
@@ -1710,7 +1706,7 @@ const Cart = ({
                                   ? userInfoStored?.currency
                                   : "CA$"
                                 } 
-                        ${formatPrice(
+                                ${formatPrice(
                                   parseFloat(totalShippingRate).toFixed(2)
                                 )}`
                                 : "-"}
@@ -1722,23 +1718,26 @@ const Cart = ({
                           Subtotal ({Object.keys(cart).length}{" "}
                           {Object.keys(cart).length > 1 ? "items" : "item"})
                         </p>
-                        {/* Remove blocking loading - show price immediately */}
-                        {rateOptionsError ? (
+                        {loading ? (
+                          "..."
+                        ) : rateOptionsError ? (
                           <p className="text-lg font-medium text-blue-950">
-                            {`${userInfoStored?.currency &&
-                              userInfoStored?.currencyRate
-                              ? userInfoStored?.currency
-                              : "CA$"
-                            } ${formatPrice(
-                              (
-                                parseFloat(
-                                  userInfoStored?.currencyRate
-                                    ? subTotal * userInfoStored?.currencyRate
+                            {loading
+                              ? "..."
+                              : `${userInfoStored?.currency &&
+                                userInfoStored?.currencyRate
+                                ? userInfoStored?.currency
+                                : "CA$"
+                              } ${formatPrice(
+                                (
+                                  parseFloat(
+                                    userInfoStored?.currencyRate
+                                      ? subTotal * userInfoStored?.currencyRate
                                       : subTotal
                                   ) +
                                   parseFloat(
                                     (userInfoStored?.currencyRate
-                                      ? subTotal * userInfoStored?.currencyRate
+                                      ? (subTotal * 0.03 + 0.3) * userInfoStored?.currencyRate
                                       : subTotal * 0.03
                                     ).toFixed(2)
                                   )
@@ -1747,15 +1746,16 @@ const Cart = ({
                           </p>
                         ) : (
                           <p className="text-lg font-medium text-blue-950">
-                            {/* Remove blocking loading - show price immediately */}
-                            {`${userInfoStored?.currency &&
-                              userInfoStored?.currencyRate
-                              ? userInfoStored?.currency
-                              : "CA$"
-                            } ${formatPrice(
-                              (
-                                (parseFloat(subTotal) +
-                                  parseFloat(
+                            {loading
+                              ? "..."
+                              : `${userInfoStored?.currency &&
+                                userInfoStored?.currencyRate
+                                ? userInfoStored?.currency
+                                : "CA$"
+                              } ${formatPrice(
+                                (
+                                  (parseFloat(subTotal) +
+                                    parseFloat(
                                       (
                                         (parseFloat(subTotal) +
                                           parseFloat(
@@ -2203,3 +2203,4 @@ const Cart = ({
 };
 
 export default Cart;
+

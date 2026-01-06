@@ -1,146 +1,84 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { changeCartPrice, getGeoIP } from "@/lib/geoIP";
+import { getGeoIP } from "@/lib/geoIP";
 import { pushEventRemoveCart } from "@/utils/dataLayer";
 
 const CartContext = createContext();
 
 export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-  return context;
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart must be used within CartProvider");
+  return ctx;
 };
 
 export const CartProvider = ({ children }) => {
-  const router = useRouter();
   const [cart, setCart] = useState({});
-  const [subTotal, setSubTotal] = useState(0);
-  const [userInfo, setUserInfo] = useState({});
-  const [currency, setCurrency] = useState("");
+  const [itemsTotal, setItemsTotal] = useState(0);   // BEFORE discount
+  const [subTotal, setSubTotal] = useState(0);       // AFTER discount
   const [totalShippingRate, setTotalShippingRate] = useState(0);
   const [fetchedShippingRate, setFetchedShippingRate] = useState(0);
+  const [userInfo, setUserInfo] = useState({});
+  const [currency, setCurrency] = useState("");
 
-  const saveCartInDb = async (
-    newCart,
-    subTotal,
-    totalShippingRate,
-    fetchedShippingRate
-  ) => {
-    let user = JSON.parse(localStorage.getItem("user"));
-    if(user?.userId) {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/cart/add-cart`,
-        {
-          user_id: user?.userId,
-          cart: newCart,
-          subTotal: subTotal,
-          totalShippingRate: totalShippingRate,
-          fetchedShippingRate: fetchedShippingRate,
-        },
-        {
-          headers: {
-            "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-          },
-        }
-      );
-    }
-  };
+  // prevents API sync on first load
+  const isHydrating = useRef(true);
 
-  const saveCart = async (newCart) => {
-    localStorage.setItem("cart", JSON.stringify(newCart));
-    let subt = 0;
+  /* ---------------------------------------
+     Currency
+  --------------------------------------- */
+
+  const findCurrency = useCallback((info) => {
+    const banned = ["Pakistan", "Nigeria"];
+    setCurrency(banned.includes(info?.country) ? "USD" : info?.currency);
+  }, []);
+
+  /* ---------------------------------------
+     Helpers
+  --------------------------------------- */
+
+  const groupProductsBySeller = useCallback((data) => {
+    const grouped = {};
+    Object.keys(data).forEach((k) => {
+      const sellerId = data[k]?.productData?.seller?._id;
+      if (!grouped[sellerId]) grouped[sellerId] = [];
+      grouped[sellerId].push(data[k]);
+    });
+    return grouped;
+  }, []);
+
+  const findSelectedVariation = useCallback((vars = [], selected = []) =>
+    vars.find((v) =>
+      selected.every((s) => v[s.attributeName] === s.attributeValue)
+    ), []);
+
+  /* ---------------------------------------
+     Shipping
+  --------------------------------------- */
+
+  const getShippingRate = useCallback((products) => {
+    if (typeof window === 'undefined') return { shippingRate: 0, deductedAm: 0 };
+    
+    const userSurcharge =
+      JSON.parse(localStorage.getItem("userInfo") || "{}")?.surCharge || {};
+
     let shippingRate = 0;
-    let keys = Object.keys(newCart);
-    let oldSubTotal = 0
-    const sellerShippingRate = getShippingRatesBySeller(newCart)
-      ? getShippingRatesBySeller(newCart)
-      : undefined;
-    for (let i = 0; i < keys.length; i++) {
-      subt += applyDiscount(
-        newCart[keys[i]],
-        parseFloat(newCart[keys[i]].basePrice) *
-          parseFloat(newCart[keys[i]].orderQuantiy),
-          keys.length
-      );
-      oldSubTotal += parseFloat(newCart[keys[i]].basePrice) *
-          parseFloat(newCart[keys[i]].orderQuantiy)
-      if(oldSubTotal > subt){
-        localStorage.setItem("oldSubTotal", oldSubTotal)
-      }
-      if (sellerShippingRate && sellerShippingRate.length) {
-        for (let i = 0; i < sellerShippingRate.length; i++) {
-          subt += (sellerShippingRate[i].deductedAm) || 0;
-          shippingRate += sellerShippingRate[i].shippingRate
-            ? sellerShippingRate[i].shippingRate
-            : 0;
-        }
-      }
-      if (
-        keys.length &&
-        newCart[keys[0]].shippingOptions?.length &&
-        userInfo?.currency &&
-        userInfo?.currencyRate
-      ) {
-        var fetchedShippingRate = shippingRate / (userInfo?.currencyRate || 1);
-        localStorage.setItem(
-          "fetchedShippingRate",
-          fetchedShippingRate.toFixed(2)
-        );
-        setFetchedShippingRate(fetchedShippingRate.toFixed(2));
-      } else {
-        localStorage.setItem("fetchedShippingRate", shippingRate.toFixed(2));
-        setFetchedShippingRate(shippingRate.toFixed(2));
-      }
-
-      localStorage.setItem("totalShippingRate", shippingRate.toFixed(2));
-      localStorage.setItem("subTotal", subt);
-      setSubTotal(subt);
-      setTotalShippingRate(shippingRate.toFixed(2));
-      await saveCartInDb(
-        newCart,
-        subt,
-        shippingRate.toFixed(2),
-        fetchedShippingRate?.toFixed(2)
-      );
-    }
-  };
-
-  const getShippingRatesBySeller = (data) => {
-    const groupedData = groupProductsBySeller(data);
-    const shippingRatesBySeller = [];
-
-    for (const sellerId in groupedData) {
-      const { shippingRate, deductedAm } = getShippingRate(
-        groupedData[sellerId]
-      );
-      shippingRatesBySeller.push({ sellerId, shippingRate, deductedAm });
-    }
-
-    return shippingRatesBySeller;
-  };
-
-  const getShippingRate = (products) => {
-    let userSurcharge =
-      JSON.parse(localStorage.getItem("userInfo"))?.surCharge || {};
     let surcharge = 0;
-    for(const item of products) {
+
+    for (const item of products) {
       if (item.productData?.variations?.length) {
-        let selectedVariant = findSelectedVariation(
-          item.productData?.variations,
+        const variant = findSelectedVariation(
+          item.productData.variations,
           item.selectedVariations
         );
-        item.productData.surTotalAmount = selectedVariant.surTotalAmount;
+        if (variant) {
+          item.productData.surTotalAmount = variant.surTotalAmount;
+        }
       }
-    }
-    for (const item of products) {
+
       if (
         item.productData.productType !== "Downloadable" &&
-        item.productData.seller?.shippingConfigId?.international
-          ?.afoma_shipping &&
+        item.productData?.seller?.shippingConfigId?.international?.afoma_shipping &&
         item.productData?.seller?.country?.trim() !== userInfo?.country?.trim()
       ) {
         surcharge =
@@ -148,44 +86,172 @@ export const CartProvider = ({ children }) => {
             `${item.productData?.seller?.country?.trim()}-${userInfo?.country?.trim()}`
           ] || 0;
       }
-      if (item.shippingRate > 0) {
-        return {
-          shippingRate: item.shippingRate,
-          deductedAm: (surcharge * ((item.orderQuantiy - 1) + products.length)),
-        };
-      } else {
-        return {
-          shippingRate: undefined,
-          deductedAm: (surcharge * ((item.orderQuantiy - 1) + products.length)),
-        };
+
+      if (!shippingRate && item.shippingRate > 0) {
+        shippingRate = item.shippingRate;
       }
     }
-    return 0;
-  };
 
-  const findSelectedVariation = (variations, selectedVariations) => {
-    return variations.find((variation) => {
-      return selectedVariations.every(
-        (selected) =>
-          variation[selected.attributeName] === selected.attributeValue
+    const qtyFactor =
+      products.reduce((s, p) => s + (p.orderQuantiy - 1), 0) +
+      products.length;
+
+    return {
+      shippingRate,
+      deductedAm: surcharge * qtyFactor,
+    };
+  }, [findSelectedVariation, userInfo?.country]);
+
+  const getShippingRatesBySeller = useCallback((cart) => {
+    const grouped = groupProductsBySeller(cart);
+    return Object.keys(grouped).map((sellerId) => ({
+      sellerId,
+      ...getShippingRate(grouped[sellerId]),
+    }));
+  }, [groupProductsBySeller, getShippingRate]);
+
+  /* ---------------------------------------
+     Coupons
+  --------------------------------------- */
+
+  const isCouponEligible = useCallback((product, coupon) => {
+    if (!coupon) return false;
+
+    const sellerId = product?.productData?.seller?.userId;
+    const createdBy = coupon?.createdBy;
+
+    if (createdBy?._id && createdBy._id == sellerId) return true;
+    if (createdBy?.userRole === "admin") return true;
+    if (createdBy?.userRole === "affiliate") return true;
+
+    return false;
+  }, []);
+
+  const applyDiscount = useCallback((product, amount, eligibleCount) => {
+    if (typeof window === 'undefined') return amount;
+    
+    const coupon = JSON.parse(localStorage.getItem("appliedCoupon") || "null");
+    if (!coupon) return amount;
+    if (!isCouponEligible(product, coupon)) return amount;
+
+    if (coupon.couponType === "percentage") {
+      return amount - (amount * Number(coupon.discountAmount)) / 100;
+    }
+
+    // fixed coupon
+    return amount - Number(coupon.discountAmount) / (eligibleCount || 1);
+  }, [isCouponEligible]);
+
+  /* ---------------------------------------
+     SAVE CART (SINGLE SOURCE OF TRUTH)
+  --------------------------------------- */
+
+  const saveCart = useCallback(async (newCart) => {
+    if (typeof window === 'undefined') return;
+    
+    localStorage.setItem("cart", JSON.stringify(newCart));
+
+    const keys = Object.keys(newCart);
+    const coupon = JSON.parse(localStorage.getItem("appliedCoupon") || "null");
+
+    let itemsTotalRaw = 0;
+    let itemsTotalAfterDiscount = 0;
+
+    const eligibleCount = keys.filter((k) =>
+      isCouponEligible(newCart[k], coupon)
+    ).length;
+
+    // BEFORE discount
+    keys.forEach((k) => {
+      itemsTotalRaw +=
+        Number(newCart[k].basePrice) *
+        Number(newCart[k].orderQuantiy);
+    });
+
+    // AFTER discount
+    keys.forEach((k) => {
+      const base =
+        Number(newCart[k].basePrice) *
+        Number(newCart[k].orderQuantiy);
+
+      itemsTotalAfterDiscount += applyDiscount(
+        newCart[k],
+        base,
+        eligibleCount
       );
     });
-  };
 
-  const groupProductsBySeller = (data) => {
-    const groupedData = {};
-    for (const key in data) {
-      const item = data[key];
-      const sellerId = item.productData?.seller._id;
-      if (!groupedData[sellerId]) {
-        groupedData[sellerId] = [];
-      }
-      groupedData[sellerId].push(item);
+    // Shipping
+    let shippingRate = 0;
+    let surcharge = 0;
+
+    getShippingRatesBySeller(newCart).forEach((r) => {
+      shippingRate += r.shippingRate || 0;
+      surcharge += r.deductedAm || 0;
+    });
+
+    const finalSubTotal = itemsTotalAfterDiscount + surcharge;
+    itemsTotalRaw = itemsTotalRaw + surcharge;
+
+    // Currency conversion (shipping only)
+    let fetchedRate = shippingRate;
+    if (
+      keys.length &&
+      newCart[keys[0]]?.shippingOptions?.length &&
+      userInfo?.currencyRate
+    ) {
+      fetchedRate = shippingRate / userInfo.currencyRate;
     }
-    return groupedData;
-  };
 
-  const addToCart = (
+    // Persist state
+    setItemsTotal(itemsTotalRaw);
+    setSubTotal(finalSubTotal);
+    setTotalShippingRate(shippingRate.toFixed(2));
+    setFetchedShippingRate(fetchedRate.toFixed(2));
+
+    localStorage.setItem("itemsTotal", itemsTotalRaw.toFixed(2));
+    localStorage.setItem("subTotal", finalSubTotal.toFixed(2));
+    localStorage.setItem("totalShippingRate", shippingRate.toFixed(2));
+    localStorage.setItem("fetchedShippingRate", fetchedRate.toFixed(2));
+
+    if (coupon && itemsTotalRaw > itemsTotalAfterDiscount) {
+      localStorage.setItem("oldSubTotal", itemsTotalRaw.toFixed(2));
+    } else {
+      localStorage.removeItem("oldSubTotal");
+    }
+
+    // 🔒 skip backend sync during hydration
+    if (isHydrating.current) return;
+
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (user?.userId) {
+      try {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/cart/add-cart`,
+          {
+            user_id: user.userId,
+            cart: newCart,
+            subTotal: finalSubTotal,
+            totalShippingRate: shippingRate.toFixed(2),
+            fetchedShippingRate: fetchedRate.toFixed(2),
+          },
+          { 
+            headers: { "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm" },
+            timeout: 5000, // Fast timeout
+          }
+        );
+      } catch (error) {
+        // Silently fail - don't block UI
+        console.warn("Failed to sync cart:", error);
+      }
+    }
+  }, [isCouponEligible, applyDiscount, getShippingRatesBySeller, userInfo?.currencyRate]);
+
+  /* ---------------------------------------
+     Cart Actions
+  --------------------------------------- */
+
+  const addToCart = useCallback((
     productId,
     orderQuantiy,
     maxQuantity,
@@ -197,201 +263,122 @@ export const CartProvider = ({ children }) => {
     shippingRate,
     selectedVariations
   ) => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
-    setUserInfo(userInfo);
-    findCurrency(userInfo);
-    let newCart = cart;
-    let keys = Object.keys(newCart)
-    if (productId in cart) {
-      newCart[productId].orderQuantiy = orderQuantiy;
-      newCart[productId].totalAmount = applyDiscount(
-        newCart[productId],
-        parseFloat(newCart[productId].basePrice) * orderQuantiy,
-        keys.length
-      );
-      newCart[productId].shippingOptions = shippingOptions;
-      newCart[productId].shippingService = shippingService;
-      newCart[productId].shippingRate = shippingRate;
-    } else {
-      newCart[productId] = {
-        orderQuantiy: orderQuantiy,
-        totalAmount: applyDiscount(
-          newCart[productId],
-          parseFloat(orderQuantiy) * parseFloat(basePrice),
-          1
-        ),
-        selectedVariations,
-        productData,
-        maxQuantity,
-        basePrice,
-        remark,
-        shippingOptions,
-        shippingService,
-        shippingRate,
-      };
-      toast.success("Item Added!");
-    }
-    setCart(newCart);
-    saveCart(newCart);
-  };
+    if (typeof window === 'undefined') return;
+    
+    const info = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    setUserInfo(info);
+    findCurrency(info);
 
-  const applyDiscount = (product, amount, cartLength) => {
-    const appliedCoupon = JSON.parse(localStorage.getItem("appliedCoupon"));
-    const sellerId =
-      product &&
-      product.productData &&
-      product.productData.seller &&
-      product.productData.seller.userId
-        ? product.productData.seller.userId
-        : undefined;
-    if (
-      (appliedCoupon &&
-        appliedCoupon.couponCode &&
-        appliedCoupon.discountAmount &&
-        appliedCoupon.createdBy &&
-        appliedCoupon.createdBy._id &&
-        sellerId &&
-        appliedCoupon.createdBy._id == sellerId) ||
-      (appliedCoupon &&
-        appliedCoupon.couponCode &&
-        appliedCoupon.discountAmount &&
-        appliedCoupon.createdBy &&
-        appliedCoupon.createdBy.userRole &&
-        appliedCoupon.createdBy.userRole === "admin") ||
-        (appliedCoupon &&
-        appliedCoupon.couponCode &&
-        appliedCoupon.discountAmount &&
-        appliedCoupon.createdBy &&
-        appliedCoupon.createdBy.userRole &&
-        appliedCoupon.createdBy.userRole === "affiliate")
-    ) {
-      if (appliedCoupon.couponType == "percentage") {
-        const discountAmount = parseFloat(appliedCoupon.discountAmount);
-        const discountedAmount =
-          parseFloat(amount) - (parseFloat(amount) * discountAmount) / 100;
-        return discountedAmount;
-      }
-      else{
-        return  (parseFloat(amount) - (appliedCoupon.discountAmount / (cartLength ? cartLength : 1)))
+    setCart((prev) => {
+      const newCart = { ...prev };
+
+      if (productId in newCart) {
+        newCart[productId].orderQuantiy = orderQuantiy;
+        newCart[productId].shippingRate = shippingRate;
+      } else {
+        newCart[productId] = {
+          orderQuantiy,
+          selectedVariations,
+          productData,
+          maxQuantity,
+          basePrice,
+          remark,
+          shippingOptions,
+          shippingService,
+          shippingRate,
+        };
+        toast.success("Item Added!");
       }
 
-    }
-    return parseFloat(amount);
-  };
-
-  const removeFromCart = (productId, orderQuantiy) => {
-    let newCart = JSON.parse(JSON.stringify(cart));
-    let keys = Object.keys(newCart)
-    if (newCart[productId] && newCart[productId].orderQuantiy > 1) {
-      newCart[productId].orderQuantiy -= orderQuantiy;
-      newCart[productId].totalAmount = applyDiscount(
-        newCart[productId],
-        parseFloat(newCart[productId].basePrice) *
-          parseFloat(newCart[productId].orderQuantiy),
-          keys.length
-      );
-      setCart(newCart);
       saveCart(newCart);
-      if(!Object.keys(newCart).length){
-        localStorage.removeItem("appliedCoupon");
-        localStorage.removeItem("oldSubTotal");
-      }
-    }
-  };
+      return newCart;
+    });
+  }, [findCurrency, saveCart]);
 
-  const clearCart = () => {
-    localStorage.removeItem("selected-delivery-address");
-    localStorage.removeItem("appliedCoupon");
-    localStorage.removeItem("oldSubTotal");
-    setCart({});
-    saveCart({});
-  };
+  const removeFromCart = useCallback((productId, qty) => {
+    setCart((prev) => {
+      const newCart = { ...prev };
+      if (!newCart[productId]) return prev;
 
-  const deleteFromCart = (productId) => {
-    let newCart = JSON.parse(JSON.stringify(cart));
-    if (productId in cart) {
-      if (
-        newCart[productId] &&
-        newCart[productId].productData &&
-        newCart[productId].productData.couponCode
-      ) {
-        localStorage.removeItem("appliedCoupon");
-        localStorage.removeItem("oldSubTotal");
+      if (newCart[productId].orderQuantiy > 1) {
+        newCart[productId].orderQuantiy -= qty;
+      } else {
+        delete newCart[productId];
       }
-      pushEventRemoveCart(newCart[productId])
+
+      saveCart(newCart);
+      return newCart;
+    });
+  }, [saveCart]);
+
+  const deleteFromCart = useCallback((productId) => {
+    setCart((prev) => {
+      if (!prev[productId]) return prev;
+      pushEventRemoveCart(prev[productId]);
+      const newCart = { ...prev };
       delete newCart[productId];
-    }
-    if(!Object.keys(newCart).length){
-        localStorage.removeItem("oldSubTotal");
-    }
-    setCart(newCart);
-    saveCart(newCart);
-    toast.success("Item Removed!");
-  };
+      saveCart(newCart);
+      toast.success("Item Removed!");
+      return newCart;
+    });
+  }, [saveCart]);
 
-  const findCurrency = (userInfo) => {
-    const payPalBanCountries = ["Pakistan", "Nigeria"];
-    if (payPalBanCountries.some((country) => country == userInfo.country)) {
-      setCurrency("USD");
-    } else {
-      setCurrency(userInfo.currency);
+  const clearCart = useCallback(() => {
+    setCart({});
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("appliedCoupon");
     }
-  };
+    saveCart({});
+  }, [saveCart]);
+
+  /* ---------------------------------------
+     Init
+  --------------------------------------- */
 
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
-    setUserInfo(userInfo);
-    findCurrency(userInfo);
-    const loadedCart = JSON.parse(localStorage.getItem("cart"));
-    if (loadedCart) {
-      setCart(loadedCart);
-    }
+    getGeoIP();
+    const info = JSON.parse(localStorage.getItem("userInfo")) || {};
+    setUserInfo(info);
+    findCurrency(info);
+
+    const storedCart = JSON.parse(localStorage.getItem("cart"));
+    if (storedCart) setCart(storedCart);
+
+    // hydration complete
+    setTimeout(() => {
+      isHydrating.current = false;
+    }, 0);
   }, []);
 
-  const getCartFromDB = async () => {
-    try {
-      let user = JSON.parse(localStorage.getItem("user"));
-      let storeCart = JSON.parse(localStorage.getItem("cart"));
-      if (user?.userId && storeCart && Object.keys(storeCart).length == 0) {
-        const { data } = await axios.get(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/cart/${user?.userId}`,
-          {
-            headers: {
-              "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-            },
-          }
-        );
-        if (data && data?.cart) {
-          localStorage.setItem("cart", JSON.stringify(data.cart));
-          localStorage.setItem("subTotal", JSON.stringify(data.subTotal));
-          localStorage.setItem("totalShippingRate", JSON.stringify(data.totalShippingRate));
-          localStorage.setItem("fetchedShippingRate", JSON.stringify(data.fetchedShippingRate));
-          changeCartPrice(false);
-        }
-      }
-    } catch (err) {
-      console.log(err)
-    }
-  };
-
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
     cart,
-    setCart,
     addToCart,
     removeFromCart,
-    clearCart,
     deleteFromCart,
+    clearCart,
+    itemsTotal,
     subTotal,
     totalShippingRate,
     fetchedShippingRate,
-    saveCart,
-    userInfoStored: userInfo,
     currencyUser: currency,
-    getCartFromDB,
-  };
+    userInfoStored: userInfo,
+  }), [
+    cart,
+    addToCart,
+    removeFromCart,
+    deleteFromCart,
+    clearCart,
+    itemsTotal,
+    subTotal,
+    totalShippingRate,
+    fetchedShippingRate,
+    currency,
+    userInfo,
+  ]);
 
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );
