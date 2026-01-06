@@ -233,7 +233,7 @@ const Cart = ({}) => {
         );
       });
 
-      const groupedBySeller = formatCartGrouping();
+      const groupedBySeller = formatCartGrouping;
       setUpdatedCart(groupedBySeller);
       cartUpdatedInternally.current = true;
     } catch (error) {
@@ -241,9 +241,9 @@ const Cart = ({}) => {
       setLoading(false);
       throw error; // Rethrow the error
     }
-  };
+  }, [addToCart, cart, formatCartGrouping, userInfoStored?.country, userInfoStored?.currencyRate]);
 
-  const loadCartOnRefresh = (carts) => {
+  const loadCartOnRefresh = useCallback((carts) => {
     carts.map((groupCartItem) => {
       let cartItem = groupCartItem.productData._id;
 
@@ -536,8 +536,8 @@ const Cart = ({}) => {
           response.data.updatedOrder.coupon
         ) {
           let updatedCart = updateOrderData(response.data.updatedOrder.clonedCart);
-          const subTotal = localStorage.getItem("subTotal")
-          localStorage.setItem("oldSubTotal", subTotal)
+          const subTotal = localStorage.getItem("subTotal");
+          localStorage.setItem("oldSubTotal", subTotal);
           cartUpdatedInternally.current = true;
           localStorage.setItem("cart", JSON.stringify(updatedCart));
           setCart(updatedCart);
@@ -549,17 +549,15 @@ const Cart = ({}) => {
           setAppliedCoupon(response.data.updatedOrder.coupon);
           setCouponApplied(true);
           toast.success(response.data.message);
-          // fetchData()
         }
       } catch (e) {
         localStorage.removeItem("appliedCoupon");
         if (e && e.response && e.response.data && e.response.data.message) {
           toast.error(e.response.data.message);
         }
-      } finally {
       }
     }
-  };
+  }, [cart, updateOrderData, setCart]);
 
   const updateOrderData = useCallback((orderData) => {
     const updated = { ...orderData };
@@ -614,7 +612,7 @@ const Cart = ({}) => {
     setShowGuestForm(true);
   }, []);
 
-  const handleGuestSubmit = async (values, { setSubmitting }) => {
+  const handleGuestSubmit = useCallback(async (values, { setSubmitting }) => {
     let user = {
       name: values.name,
       email: values.email,
@@ -625,22 +623,21 @@ const Cart = ({}) => {
       city: values.city,
       countryCode: fetchCountryCode(values.country),
       phone: values?.phone,
-    }
-    const token = await getRecaptchaToken(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
-    const result = await reCaptchaVerification(token)
+    };
+    const token = await getRecaptchaToken(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
+    const result = await reCaptchaVerification(token);
     if (result?.data?.success && result?.data?.score > 0.5) {
       localStorage.setItem("user", JSON.stringify(user));
       setSubmitting(false);
       setShowGuestForm(false);
       setOpenGuestForm(false);
       formatCartGroupingGetRate(true);
-      createGuestUser(user)
-      //submit data in database
+      createGuestUser(user);
     } else {
       // send OTP and Open popup to verify
-      const result = await sendOTP(user)
+      const result = await sendOTP(user);
       if (result.success) {
-        setOtpToken(result.otpToken)
+        setOtpToken(result.otpToken);
         setSubmitting(false);
         setShowGuestForm(false);
         setOpenGuestForm(false);
@@ -648,7 +645,7 @@ const Cart = ({}) => {
         setOtpError(false);
       }
     }
-  }, [formatCartGroupingGetRate]);
+  }, [formatCartGroupingGetRate, fetchCountryCode, createGuestUser]);
 
   const fetchCountryCode = useCallback((countryName) => {
     const countryInfo = countryData.countries.all.find(
@@ -1427,7 +1424,7 @@ const Cart = ({}) => {
                                                           }
 
                                                           const groupedBySeller =
-                                                            formatCartGrouping();
+                                                            formatCartGrouping;
                                                           setUpdatedCart(
                                                             groupedBySeller
                                                           );
