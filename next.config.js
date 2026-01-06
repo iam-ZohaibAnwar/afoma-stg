@@ -42,7 +42,7 @@ module.exports = {
   staticPageGenerationTimeout: 300,
   // Optimize webpack for faster builds
   webpack: (config, { isServer, dev }) => {
-    // Only apply aggressive splitting in production
+    // Only apply aggressive splitting in production builds
     if (!isServer && !dev) {
       config.optimization.splitChunks = {
         chunks: 'all',
@@ -82,11 +82,11 @@ module.exports = {
           },
         },
       };
+      
+      // Optimize build performance (production only)
+      config.optimization.usedExports = true;
+      config.optimization.sideEffects = false;
     }
-    
-    // Optimize build performance
-    config.optimization.usedExports = true;
-    config.optimization.sideEffects = false;
     
     return config;
   },
@@ -134,12 +134,13 @@ module.exports = {
       },
     ];
   },
-  // Experimental features for faster builds
-  experimental: {
-    optimizeCss: true,
-  },
-  // Compiler optimizations
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
-  },
+  // Experimental features for faster builds (only in production)
+  ...(process.env.NODE_ENV === "production" ? {
+    experimental: {
+      optimizeCss: true,
+    },
+    compiler: {
+      removeConsole: true,
+    },
+  } : {}),
 };
