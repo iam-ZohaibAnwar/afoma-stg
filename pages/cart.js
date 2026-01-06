@@ -13,7 +13,7 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 //import { Noto_Serif } from "next/font/google";
 import Head from "next/head";
 import Link from "next/link";
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Select from "react-select";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
@@ -31,7 +31,8 @@ import { useCart } from "@/context/CartProvider";
 
 const Cart = ({}) => {
   const {cart, setCart, addToCart, removeFromCart, deleteFromCart, subTotal, totalShippingRate, fetchedShippingRate, userInfoStored} = useCart();
-  // Removed console.logs for production optimization
+  console.log("cart page cart", cart)
+  console.log("cart page userInfoStored", subTotal, totalShippingRate, fetchedShippingRate, )
   const [loading, setLoading] = useState(true);
   const [rateOptionsError, setRateOptionsError] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -52,25 +53,23 @@ const Cart = ({}) => {
 
   const cartUpdatedInternally = useRef(false);
 
-  const formatPrice = useCallback((price) => {
+  const formatPrice = (price) => {
     const numericPrice = Number(price); // Ensure it's a number
     return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
-  }, []);
+  };
 
-  const getRateOptions2 = useCallback(async (carts) => {
-    if (typeof window === 'undefined') return;
-    
+  const getRateOptions2 = async (carts) => {
     let isError = false;
-    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const user = JSON.parse(localStorage.getItem("user"));
     if(user) {
       setIsUserInfo(false);
       setIsLoggedIn(true);
     }
     const selectedAddress = JSON.parse(
-      localStorage.getItem("selected-delivery-address") || "null"
+      localStorage.getItem("selected-delivery-address")
     );
     let userInfo = {};
 
@@ -233,7 +232,7 @@ const Cart = ({}) => {
         );
       });
 
-      const groupedBySeller = formatCartGrouping;
+      const groupedBySeller = formatCartGrouping();
       setUpdatedCart(groupedBySeller);
       cartUpdatedInternally.current = true;
     } catch (error) {
@@ -241,9 +240,9 @@ const Cart = ({}) => {
       setLoading(false);
       throw error; // Rethrow the error
     }
-  }, [addToCart, cart, formatCartGrouping, userInfoStored?.country, userInfoStored?.currencyRate]);
+  };
 
-  const loadCartOnRefresh = useCallback((carts) => {
+  const loadCartOnRefresh = (carts) => {
     carts.map((groupCartItem) => {
       let cartItem = groupCartItem.productData._id;
 
@@ -281,12 +280,9 @@ const Cart = ({}) => {
         cart[cartItem]?.selectedVariations
       );
     });
-  }, [addToCart, cart]);
+  }
 
-  // Memoize formatCartGrouping - expensive operation
-  const formatCartGrouping = useMemo(() => {
-    if (!cart || Object.keys(cart).length === 0) return [];
-    
+  const formatCartGrouping = () => {
     const groupedBySeller = Object.values(cart).reduce((acc, order) => {
       if (order.productData) {
         const seller = order.productData.seller;
@@ -307,6 +303,9 @@ const Cart = ({}) => {
             transitDays: undefined,
           });
         }
+        // if(userInfoStored.currency && !isNaN(parseFloat(order.totalAmount)) && !isNaN(parseFloat(userInfoStored.currencyRate))){
+        //   order.productData.surTotalAmount = parseFloat((parseFloat(order.totalAmount) * parseFloat(userInfoStored.currencyRate)).toFixed(2))
+        // }
         // Add the product to the corresponding seller's cart
         acc[sellerIndex === -1 ? acc.length - 1 : sellerIndex].cart.push({
           orderQuantiy: order.orderQuantiy,
@@ -334,15 +333,14 @@ const Cart = ({}) => {
         }
         return acc;
       }
-      return acc;
     }, []);
     return groupedBySeller;
-  }, [cart]);
+  };
 
   const formatCartGroupingGetRate = useCallback(async (isCallingGetRate) => {
     setApiError(undefined);
     setRateOptionsError(false);
-    const groupedBySeller = formatCartGrouping;
+    const groupedBySeller = formatCartGrouping();
 
     if (groupedBySeller && groupedBySeller.length && isCallingGetRate) {
       setLoading(true);
@@ -371,22 +369,21 @@ const Cart = ({}) => {
       setLoading(false);
       setUpdatedCart(groupedBySeller);
     }
-  }, [formatCartGrouping, getRateOptions2, loadCartOnRefresh]);
-
-  // Memoize total calculation
-  const cartTotal = useMemo(() => {
-    if (subTotal <= 0) return 0;
-    const shipping = parseFloat(fetchedShippingRate ?? totalShippingRate);
-    const subtotal = parseFloat(subTotal);
-    const stripeFee = (subtotal + shipping) * 0.03 + 0.30;
-    return subtotal + shipping + stripeFee;
-  }, [subTotal, fetchedShippingRate, totalShippingRate]);
+  });
 
   useEffect(() => {
-    if (cartTotal > 0) {
-      pushEventViewToCart(cart, cartTotal);
+    if (subTotal > 0) {
+      const shipping = parseFloat(fetchedShippingRate ?? totalShippingRate);
+      const subtotal = parseFloat(subTotal);
+
+      // Stripe fee = (subtotal + shipping) * 0.03 + 0.30
+      const stripeFee = (subtotal + shipping) * 0.03 + 0.30;
+
+      const total = subtotal + shipping + stripeFee;
+      console.log(total)
+      pushEventViewToCart(cart, total)
     }
-  }, [cartTotal, cart]);
+  }, [subTotal])
 
   const addToCart2 = (
     productId,
@@ -422,13 +419,10 @@ const Cart = ({}) => {
   };
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const userData = JSON.parse(localStorage.getItem("user") || "null");
+    const userData = JSON.parse(localStorage.getItem("user"));
     if (userData) setIsUserInfo(false);
-    if(userData && userData.userId) setUser(userData);
-    
-    const appliedCoupon = JSON.parse(localStorage.getItem("appliedCoupon") || "null");
+    if(userData && userData.userId) setUser(userData)
+    const appliedCoupon = JSON.parse(localStorage.getItem("appliedCoupon"));
     if (appliedCoupon && appliedCoupon.couponCode) {
       setAppliedCoupon(appliedCoupon);
       setCouponApplied(true);
@@ -447,16 +441,14 @@ const Cart = ({}) => {
       fetchData();
     }
 
-    const coupon = JSON.parse(localStorage.getItem("applyCoupon") || "null");
-    if(coupon) applyCode({code: coupon.couponCode});
-    localStorage.removeItem("applyCoupon");
-  }, [cart, fetchData]);
+    const coupon = JSON.parse(localStorage.getItem("applyCoupon"))
+    if(coupon) applyCode({code: coupon.couponCode})
+    localStorage.removeItem("applyCoupon")
+  }, [cart]);
 
   
   const fetchData = useCallback(async () => {
-    if (typeof window === 'undefined') return;
-    
-    const userData = JSON.parse(localStorage.getItem("user") || "null");
+    const userData = JSON.parse(localStorage.getItem("user"));
     if(userData) {
       setIsUserInfo(false);
       setIsLoggedIn(true);
@@ -464,14 +456,27 @@ const Cart = ({}) => {
     if (userData) {
       try {
         formatCartGroupingGetRate(true);
+        // const response = await axios
+        //   .create({
+        //     headers: {
+        //       "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+        //       Authorization: `Bearer ${userData.accessToken}`,
+        //     },
+        //   })
+        //   .get(`${process.env.NEXT_PUBLIC_BASE_URL}/users/${userData.userId}`);
+        // if (response && response.data) {
+          
+        // }
       } catch (error) {
+        // setIsLoggedIn(false);
         console.error("Error fetching data:", error);
       }
     } else {
+      // setIsLoggedIn(false);
       setLoading(true);
       formatCartGroupingGetRate(false);
     }
-  }, [formatCartGroupingGetRate]);
+  });
 
   useEffect(() => {
     // Set default shipping option for each cart item if not already set
@@ -507,10 +512,8 @@ const Cart = ({}) => {
     code: "",
   };
 
-  const applyCode = useCallback(async (values) => {
-    if (typeof window === 'undefined') return;
-    
-    const user = JSON.parse(localStorage.getItem("user") || "null");
+  const applyCode = async (values) => {
+    const user = JSON.parse(localStorage.getItem("user"));
     if (values && values.code && user) {
       try {
         const data = {
@@ -536,8 +539,8 @@ const Cart = ({}) => {
           response.data.updatedOrder.coupon
         ) {
           let updatedCart = updateOrderData(response.data.updatedOrder.clonedCart);
-          const subTotal = localStorage.getItem("subTotal");
-          localStorage.setItem("oldSubTotal", subTotal);
+          const subTotal = localStorage.getItem("subTotal")
+          localStorage.setItem("oldSubTotal", subTotal)
           cartUpdatedInternally.current = true;
           localStorage.setItem("cart", JSON.stringify(updatedCart));
           setCart(updatedCart);
@@ -549,29 +552,30 @@ const Cart = ({}) => {
           setAppliedCoupon(response.data.updatedOrder.coupon);
           setCouponApplied(true);
           toast.success(response.data.message);
+          // fetchData()
         }
       } catch (e) {
         localStorage.removeItem("appliedCoupon");
         if (e && e.response && e.response.data && e.response.data.message) {
           toast.error(e.response.data.message);
         }
+      } finally {
       }
     }
-  }, [cart, updateOrderData, setCart]);
+  };
 
-  const updateOrderData = useCallback((orderData) => {
-    const updated = { ...orderData };
-    for (const key in updated) {
-      if (updated.hasOwnProperty(key)) {
-        updated[key].totalAmount = updated[key].totalAmount
-          ? updated[key].totalAmount
-          : parseFloat(updated[key].basePrice);
+  function updateOrderData(orderData) {
+    for (const key in orderData) {
+      if (orderData.hasOwnProperty(key)) {
+        orderData[key].totalAmount = orderData[key].totalAmount
+          ? orderData[key].totalAmount
+          : parseFloat(orderData[key].basePrice);
       }
     }
-    return updated;
-  }, []);
+    return orderData;
+  }
 
-  const getProductImage = useCallback((productDetail) => {
+  const getProductImage = (productDetail) => {
     if (
       productDetail &&
       productDetail.productData &&
@@ -599,20 +603,19 @@ const Cart = ({}) => {
       }
       return productDetail.productData.images[0].imageUrl;
     }
-    return null;
-  }, []);
+  };
 
-  const handleCheckout = useCallback(() => {
+  const handleCheckout = () => {
     setIsUserInfo(true);
-  }, []);
+  }
 
-  const handleContinue = useCallback(() => {
+  const handleContinue = () => {
     setIsUserInfo(false);
     setOpenGuestForm(true);
     setShowGuestForm(true);
-  }, []);
+  }
 
-  const handleGuestSubmit = useCallback(async (values, { setSubmitting }) => {
+  const handleGuestSubmit = async (values, { setSubmitting }) => {
     let user = {
       name: values.name,
       email: values.email,
@@ -623,21 +626,22 @@ const Cart = ({}) => {
       city: values.city,
       countryCode: fetchCountryCode(values.country),
       phone: values?.phone,
-    };
-    const token = await getRecaptchaToken(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
-    const result = await reCaptchaVerification(token);
+    }
+    const token = await getRecaptchaToken(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
+    const result = await reCaptchaVerification(token)
     if (result?.data?.success && result?.data?.score > 0.5) {
       localStorage.setItem("user", JSON.stringify(user));
       setSubmitting(false);
       setShowGuestForm(false);
       setOpenGuestForm(false);
       formatCartGroupingGetRate(true);
-      createGuestUser(user);
+      createGuestUser(user)
+      //submit data in database
     } else {
       // send OTP and Open popup to verify
-      const result = await sendOTP(user);
+      const result = await sendOTP(user)
       if (result.success) {
-        setOtpToken(result.otpToken);
+        setOtpToken(result.otpToken)
         setSubmitting(false);
         setShowGuestForm(false);
         setOpenGuestForm(false);
@@ -645,16 +649,16 @@ const Cart = ({}) => {
         setOtpError(false);
       }
     }
-  }, [formatCartGroupingGetRate, fetchCountryCode, createGuestUser]);
+  };
 
-  const fetchCountryCode = useCallback((countryName) => {
+  const fetchCountryCode = (countryName) => {
     const countryInfo = countryData.countries.all.find(
       (c) => c.name === countryName
     );
     return countryInfo ? countryInfo.alpha2 : ""; // Use alpha2 for the country code
-  }, []);
+  };
 
-  const handleOtpChange = useCallback((e, index) => {
+  const handleOtpChange = (e, index) => {
     const value = e.target.value.replace(/\D/, "");
     if (!value) return;
     const newOtp = [...otp];
@@ -668,9 +672,9 @@ const Cart = ({}) => {
     if (newOtp.every(d => d?.length === 1)) {
       handleVerifyOtp(newOtp);
     }
-  }, [otp, handleVerifyOtp]);
+  };
 
-  const handleBackspace = useCallback((e, index) => {
+  const handleBackspace = (e, index) => {
     if (e.key === "Backspace") {
       e.preventDefault();
 
@@ -687,9 +691,9 @@ const Cart = ({}) => {
         setOtp(updatedOtp);
       }
     }
-  }, [otp]);
+  };
 
-  const handleVerifyOtp = useCallback(async (newOtp = null) => {
+  const handleVerifyOtp = async (newOtp = null) => {
     const otpArray = Array.isArray(newOtp) ? newOtp : Array.isArray(otp) ? otp : [];
     const finalOtp = otpArray.join("");
   
@@ -716,9 +720,9 @@ const Cart = ({}) => {
       console.error("OTP verification failed:", error);
       setOtpError(true);
     }
-  }, [otp, otpToken, formatCartGroupingGetRate]);
+  };
 
-  const handleOtpPaste = useCallback((e) => {
+  const handleOtpPaste = (e) => {
     e.preventDefault();
     const pasteData = e.clipboardData.getData("text").trim();
 
@@ -744,15 +748,16 @@ const Cart = ({}) => {
     if (digits.length === 6) {
       handleVerifyOtp(newOtp);
     }
-  }, [handleVerifyOtp]);
+  };
 
-  const onClose = useCallback(() => {
+
+  const onClose = () => {
     setOtpToken(null); // Hides the modal
     setOtp(["", "", "", "", "", ""]); // Optional: Clear the OTP fields too
     setOtpError(false); 
-  }, []);
+  };
 
-  const createGuestUser = useCallback(async (user) => {
+  const createGuestUser = async (user) => {
     try {
       const options = {
         method: "POST",
@@ -765,13 +770,12 @@ const Cart = ({}) => {
         headers: {
           "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
         },
-        timeout: 5000, // Fast timeout
       };
       await axios.request(options);
     } catch (err) {
-      console.warn("Failed to create guest user:", err.message);
+      console.log(err.message)
     }
-  }, []);
+  }
 
   return (
     <>
@@ -1424,7 +1428,7 @@ const Cart = ({}) => {
                                                           }
 
                                                           const groupedBySeller =
-                                                            formatCartGrouping;
+                                                            formatCartGrouping();
                                                           setUpdatedCart(
                                                             groupedBySeller
                                                           );
@@ -2200,4 +2204,3 @@ const Cart = ({}) => {
 };
 
 export default Cart;
-

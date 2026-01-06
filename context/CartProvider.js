@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { getGeoIP } from "@/lib/geoIP";
@@ -28,16 +28,16 @@ export const CartProvider = ({ children }) => {
      Currency
   --------------------------------------- */
 
-  const findCurrency = useCallback((info) => {
+  const findCurrency = (info) => {
     const banned = ["Pakistan", "Nigeria"];
     setCurrency(banned.includes(info?.country) ? "USD" : info?.currency);
-  }, []);
+  };
 
   /* ---------------------------------------
      Helpers
   --------------------------------------- */
 
-  const groupProductsBySeller = useCallback((data) => {
+  const groupProductsBySeller = (data) => {
     const grouped = {};
     Object.keys(data).forEach((k) => {
       const sellerId = data[k]?.productData?.seller?._id;
@@ -45,22 +45,20 @@ export const CartProvider = ({ children }) => {
       grouped[sellerId].push(data[k]);
     });
     return grouped;
-  }, []);
+  };
 
-  const findSelectedVariation = useCallback((vars = [], selected = []) =>
+  const findSelectedVariation = (vars = [], selected = []) =>
     vars.find((v) =>
       selected.every((s) => v[s.attributeName] === s.attributeValue)
-    ), []);
+    );
 
   /* ---------------------------------------
      Shipping
   --------------------------------------- */
 
-  const getShippingRate = useCallback((products) => {
-    if (typeof window === 'undefined') return { shippingRate: 0, deductedAm: 0 };
-    
+  const getShippingRate = (products) => {
     const userSurcharge =
-      JSON.parse(localStorage.getItem("userInfo") || "{}")?.surCharge || {};
+      JSON.parse(localStorage.getItem("userInfo"))?.surCharge || {};
 
     let shippingRate = 0;
     let surcharge = 0;
@@ -100,21 +98,21 @@ export const CartProvider = ({ children }) => {
       shippingRate,
       deductedAm: surcharge * qtyFactor,
     };
-  }, [findSelectedVariation, userInfo?.country]);
+  };
 
-  const getShippingRatesBySeller = useCallback((cart) => {
+  const getShippingRatesBySeller = (cart) => {
     const grouped = groupProductsBySeller(cart);
     return Object.keys(grouped).map((sellerId) => ({
       sellerId,
       ...getShippingRate(grouped[sellerId]),
     }));
-  }, [groupProductsBySeller, getShippingRate]);
+  };
 
   /* ---------------------------------------
      Coupons
   --------------------------------------- */
 
-  const isCouponEligible = useCallback((product, coupon) => {
+  const isCouponEligible = (product, coupon) => {
     if (!coupon) return false;
 
     const sellerId = product?.productData?.seller?.userId;
@@ -125,12 +123,10 @@ export const CartProvider = ({ children }) => {
     if (createdBy?.userRole === "affiliate") return true;
 
     return false;
-  }, []);
+  };
 
-  const applyDiscount = useCallback((product, amount, eligibleCount) => {
-    if (typeof window === 'undefined') return amount;
-    
-    const coupon = JSON.parse(localStorage.getItem("appliedCoupon") || "null");
+  const applyDiscount = (product, amount, eligibleCount) => {
+    const coupon = JSON.parse(localStorage.getItem("appliedCoupon"));
     if (!coupon) return amount;
     if (!isCouponEligible(product, coupon)) return amount;
 
@@ -140,19 +136,17 @@ export const CartProvider = ({ children }) => {
 
     // fixed coupon
     return amount - Number(coupon.discountAmount) / (eligibleCount || 1);
-  }, [isCouponEligible]);
+  };
 
   /* ---------------------------------------
      SAVE CART (SINGLE SOURCE OF TRUTH)
   --------------------------------------- */
 
-  const saveCart = useCallback(async (newCart) => {
-    if (typeof window === 'undefined') return;
-    
+  const saveCart = async (newCart) => {
     localStorage.setItem("cart", JSON.stringify(newCart));
 
     const keys = Object.keys(newCart);
-    const coupon = JSON.parse(localStorage.getItem("appliedCoupon") || "null");
+    const coupon = JSON.parse(localStorage.getItem("appliedCoupon"));
 
     let itemsTotalRaw = 0;
     let itemsTotalAfterDiscount = 0;
@@ -223,35 +217,27 @@ export const CartProvider = ({ children }) => {
     // 🔒 skip backend sync during hydration
     if (isHydrating.current) return;
 
-    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const user = JSON.parse(localStorage.getItem("user"));
     if (user?.userId) {
-      try {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/cart/add-cart`,
-          {
-            user_id: user.userId,
-            cart: newCart,
-            subTotal: finalSubTotal,
-            totalShippingRate: shippingRate.toFixed(2),
-            fetchedShippingRate: fetchedRate.toFixed(2),
-          },
-          { 
-            headers: { "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm" },
-            timeout: 5000, // Fast timeout
-          }
-        );
-      } catch (error) {
-        // Silently fail - don't block UI
-        console.warn("Failed to sync cart:", error);
-      }
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/cart/add-cart`,
+        {
+          user_id: user.userId,
+          cart: newCart,
+          subTotal: finalSubTotal,
+          totalShippingRate: shippingRate.toFixed(2),
+          fetchedShippingRate: fetchedRate.toFixed(2),
+        },
+        { headers: { "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm" } }
+      );
     }
-  }, [isCouponEligible, applyDiscount, getShippingRatesBySeller, userInfo?.currencyRate]);
+  };
 
   /* ---------------------------------------
      Cart Actions
   --------------------------------------- */
 
-  const addToCart = useCallback((
+  const addToCart = (
     productId,
     orderQuantiy,
     maxQuantity,
@@ -263,9 +249,7 @@ export const CartProvider = ({ children }) => {
     shippingRate,
     selectedVariations
   ) => {
-    if (typeof window === 'undefined') return;
-    
-    const info = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    const info = JSON.parse(localStorage.getItem("userInfo")) || {};
     setUserInfo(info);
     findCurrency(info);
 
@@ -293,9 +277,9 @@ export const CartProvider = ({ children }) => {
       saveCart(newCart);
       return newCart;
     });
-  }, [findCurrency, saveCart]);
+  };
 
-  const removeFromCart = useCallback((productId, qty) => {
+  const removeFromCart = (productId, qty) => {
     setCart((prev) => {
       const newCart = { ...prev };
       if (!newCart[productId]) return prev;
@@ -309,9 +293,9 @@ export const CartProvider = ({ children }) => {
       saveCart(newCart);
       return newCart;
     });
-  }, [saveCart]);
+  };
 
-  const deleteFromCart = useCallback((productId) => {
+  const deleteFromCart = (productId) => {
     setCart((prev) => {
       if (!prev[productId]) return prev;
       pushEventRemoveCart(prev[productId]);
@@ -321,15 +305,13 @@ export const CartProvider = ({ children }) => {
       toast.success("Item Removed!");
       return newCart;
     });
-  }, [saveCart]);
+  };
 
-  const clearCart = useCallback(() => {
+  const clearCart = () => {
     setCart({});
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem("appliedCoupon");
-    }
+    localStorage.removeItem("appliedCoupon");
     saveCart({});
-  }, [saveCart]);
+  };
 
   /* ---------------------------------------
      Init
@@ -350,35 +332,22 @@ export const CartProvider = ({ children }) => {
     }, 0);
   }, []);
 
-  // Memoize context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    cart,
-    addToCart,
-    removeFromCart,
-    deleteFromCart,
-    clearCart,
-    itemsTotal,
-    subTotal,
-    totalShippingRate,
-    fetchedShippingRate,
-    currencyUser: currency,
-    userInfoStored: userInfo,
-  }), [
-    cart,
-    addToCart,
-    removeFromCart,
-    deleteFromCart,
-    clearCart,
-    itemsTotal,
-    subTotal,
-    totalShippingRate,
-    fetchedShippingRate,
-    currency,
-    userInfo,
-  ]);
-
   return (
-    <CartContext.Provider value={contextValue}>
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart,
+        removeFromCart,
+        deleteFromCart,
+        clearCart,
+        itemsTotal,
+        subTotal,
+        totalShippingRate,
+        fetchedShippingRate,
+        currencyUser: currency,
+        userInfoStored: userInfo,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
