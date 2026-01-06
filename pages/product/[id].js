@@ -580,11 +580,15 @@ function ProductDetail({ cart, addToCart, product }) {
                 {product && product.images ? (
                   product.images.map((image, index) => (
                     <div key={index}>
-                      <img
+                      <Image
                         src={image.imageUrl}
-                        alt={image.altText}
-                        className="border-[1px] hover:border-primary h-[84px] w-[76px] rounded object-cover"
+                        alt={image.altText || "product_image"}
+                        width={76}
+                        height={84}
+                        className="border-[1px] hover:border-primary h-[84px] w-[76px] rounded object-cover cursor-pointer"
                         onClick={() => handleImageClick(image)}
+                        loading="lazy"
+                        unoptimized={image.imageUrl?.includes("http")}
                       />
                     </div>
                   ))
