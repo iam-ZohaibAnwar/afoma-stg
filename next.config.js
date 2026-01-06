@@ -40,14 +40,21 @@ module.exports = {
   },
   // Increase build timeout
   staticPageGenerationTimeout: 300,
-  // Optimize webpack for faster builds
+  
+  // Performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  
+  // Optimize webpack for faster builds and runtime
   webpack: (config, { isServer, dev }) => {
-    // Only apply aggressive splitting in production builds
-    if (!isServer && !dev) {
+    // Apply optimizations in both dev and production for better performance
+    if (!isServer) {
+      // Better chunk splitting for faster loading
       config.optimization.splitChunks = {
         chunks: 'all',
         maxInitialRequests: 25,
         minSize: 20000,
+        maxSize: 244000,
         cacheGroups: {
           default: {
             minChunks: 2,
@@ -64,7 +71,7 @@ module.exports = {
             minChunks: 1,
             maxSize: 244000, // 244kb
           },
-          // FontAwesome chunk
+          // FontAwesome chunk - separate for better caching
           fontawesome: {
             name: 'fontawesome',
             test: /[\\/]node_modules[\\/]@fortawesome[\\/]/,
@@ -72,7 +79,7 @@ module.exports = {
             priority: 30,
             enforce: true,
           },
-          // React/Next chunks
+          // React/Next chunks - critical for performance
           react: {
             name: 'react',
             test: /[\\/]node_modules[\\/](react|react-dom|next|scheduler)[\\/]/,
@@ -80,25 +87,46 @@ module.exports = {
             priority: 40,
             enforce: true,
           },
+          // Form libraries chunk
+          forms: {
+            name: 'forms',
+            test: /[\\/]node_modules[\\/](formik|yup|react-select)[\\/]/,
+            chunks: 'all',
+            priority: 25,
+            enforce: true,
+          },
         },
       };
       
-      // Optimize build performance (production only)
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
+      // Tree shaking optimizations (production only to avoid breaking dev)
+      if (!dev) {
+        config.optimization.usedExports = true;
+        // Only disable side effects for specific packages, not globally
+        config.optimization.sideEffects = [
+          '*.css',
+          '*.scss',
+          '@fortawesome/**/*',
+        ];
+      }
     }
     
     return config;
   },
+  
+  // Image optimization settings
   images: {
-    // Re-enable Next.js image optimization (big LCP win).
+    // Re-enable Next.js image optimization (big LCP win)
+    formats: ['image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
     remotePatterns: [
       {
         protocol: "https",
         hostname: "api.afomamarketplace.com",
         pathname: "/**",
       },
-      // Allow WP-hosted images when WP is configured.
+      // Allow WP-hosted images when WP is configured
       ...(wordpressHostname
         ? [
             {
@@ -120,13 +148,9 @@ module.exports = {
       },
     ],
   },
+  
   async redirects() {
     return [
-      // {
-      //   source: "/category",
-      //   destination: "/blogs",
-      //   permanent: true,
-      // },
       {
         source: "/blogs/[slug]",
         destination: "/blogs",
@@ -134,13 +158,28 @@ module.exports = {
       },
     ];
   },
-  // Experimental features for faster builds (only in production)
+  
+  // Experimental features for better performance
+  experimental: {
+    optimizeCss: true,
+    // Enable modern bundling for faster builds
+    optimizePackageImports: [
+      '@fortawesome/react-fontawesome',
+      '@headlessui/react',
+      'react-select',
+      'formik',
+      'axios',
+    ],
+  },
+  
+  // Production-only optimizations
   ...(process.env.NODE_ENV === "production" ? {
-    experimental: {
-      optimizeCss: true,
-    },
     compiler: {
-      removeConsole: true,
+      removeConsole: {
+        exclude: ['error', 'warn'], // Keep errors and warnings
+      },
     },
+    // Standalone output for better production deployments
+    output: 'standalone',
   } : {}),
 };
