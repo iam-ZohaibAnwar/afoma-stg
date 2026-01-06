@@ -153,12 +153,13 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
 
 
   const getSettingsAndDetails = useCallback(async () => {
-    setLoading(true);
+    // Non-blocking fetch - doesn't prevent route changes
     try {
       const axiosInstance = axios.create({
         headers: {
           "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
         },
+        timeout: 5000, // Fast timeout
       });
 
       const response = await axiosInstance.get(
@@ -201,20 +202,23 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
-    } finally {
-      setLoading(false);
     }
+    // Removed setLoading - non-blocking
   }, []);
 
   useEffect(() => {
-    let userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+    if (typeof window === 'undefined') return;
+    let userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
     let userCurrency =
       userInfo?.currency && userInfo.currencyRate ? userInfo?.currency : false;
     setUserCurrency(userCurrency);
     setUserCountry(userInfo?.country);
     getSellerInfo();
-    getSettingsAndDetails();
-  }, []);
+    // Defer non-critical data fetching - allows instant route changes
+    setTimeout(() => {
+      getSettingsAndDetails();
+    }, 0);
+  }, [getSellerInfo, getSettingsAndDetails]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();

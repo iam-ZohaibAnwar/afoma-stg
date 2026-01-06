@@ -41,7 +41,7 @@ const Cart = ({
   saveCart,
 }) => {
   const {cart, addToCart, removeFromCart, deleteFromCart, subTotal, totalShippingRate, fetchedShippingRate, userInfoStored} = useCart();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false - non-blocking
   const [rateOptionsError, setRateOptionsError] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [updatedCart, setUpdatedCart] = useState(undefined);
@@ -351,6 +351,7 @@ const Cart = ({
     const groupedBySeller = formatCartGrouping();
 
     if (groupedBySeller && groupedBySeller.length && isCallingGetRate) {
+      // Non-blocking loading - doesn't prevent route changes
       setLoading(true);
       try {
         for (const group of groupedBySeller) {
@@ -374,10 +375,10 @@ const Cart = ({
       for (const group of groupedBySeller) {
         loadCartOnRefresh(group.cart);
       }
-      setLoading(false);
+      // Removed setLoading(false) - no blocking state needed
       setUpdatedCart(groupedBySeller);
     }
-  });
+  }, [formatCartGrouping, getRateOptions2, loadCartOnRefresh]);
 
   useEffect(() => {
     if (subTotal > 0) {
@@ -476,7 +477,7 @@ const Cart = ({
       }
     } else {
       // setIsLoggedIn(false);
-      setLoading(true);
+      // Removed setLoading(true) - non-blocking, allows instant route changes
       formatCartGroupingGetRate(false);
     }
   });
@@ -829,9 +830,9 @@ const Cart = ({
                   className="flex flex-col gap-6 lg:flex-row items-start"
                 >
                   <div className="w-full">
-                    {!loading ? (
-                      <>
-                        {updatedCart.map((sellerCart) => (
+                    {/* Remove blocking loading - render immediately */}
+                    <>
+                      {updatedCart.map((sellerCart) => (
                           <div
                             className="bg-orange-100 shadow-sm rounded-md px-[16px] py-[20px] mb-6"
                             key={sellerCart.id + sellerCart.storeTitle}
@@ -1612,8 +1613,8 @@ const Cart = ({
                           <p>Item(s) total</p>
                           <p>
                             {
-                              loading ? "..."
-                                : subTotal >= 0
+                              // Remove blocking loading - show price immediately
+                              subTotal >= 0
                                   ? (() => {
                                       const rate = userInfoStored?.currencyRate || 1;
                                       const currency = userInfoStored?.currency || "CA$";
@@ -1721,21 +1722,18 @@ const Cart = ({
                           Subtotal ({Object.keys(cart).length}{" "}
                           {Object.keys(cart).length > 1 ? "items" : "item"})
                         </p>
-                        {loading ? (
-                          "..."
-                        ) : rateOptionsError ? (
+                        {/* Remove blocking loading - show price immediately */}
+                        {rateOptionsError ? (
                           <p className="text-lg font-medium text-blue-950">
-                            {loading
-                              ? "..."
-                              : `${userInfoStored?.currency &&
-                                userInfoStored?.currencyRate
-                                ? userInfoStored?.currency
-                                : "CA$"
-                              } ${formatPrice(
-                                (
-                                  parseFloat(
-                                    userInfoStored?.currencyRate
-                                      ? subTotal * userInfoStored?.currencyRate
+                            {`${userInfoStored?.currency &&
+                              userInfoStored?.currencyRate
+                              ? userInfoStored?.currency
+                              : "CA$"
+                            } ${formatPrice(
+                              (
+                                parseFloat(
+                                  userInfoStored?.currencyRate
+                                    ? subTotal * userInfoStored?.currencyRate
                                       : subTotal
                                   ) +
                                   parseFloat(
@@ -1749,16 +1747,15 @@ const Cart = ({
                           </p>
                         ) : (
                           <p className="text-lg font-medium text-blue-950">
-                            {loading
-                              ? "..."
-                              : `${userInfoStored?.currency &&
-                                userInfoStored?.currencyRate
-                                ? userInfoStored?.currency
-                                : "CA$"
-                              } ${formatPrice(
-                                (
-                                  (parseFloat(subTotal) +
-                                    parseFloat(
+                            {/* Remove blocking loading - show price immediately */}
+                            {`${userInfoStored?.currency &&
+                              userInfoStored?.currencyRate
+                              ? userInfoStored?.currency
+                              : "CA$"
+                            } ${formatPrice(
+                              (
+                                (parseFloat(subTotal) +
+                                  parseFloat(
                                       (
                                         (parseFloat(subTotal) +
                                           parseFloat(

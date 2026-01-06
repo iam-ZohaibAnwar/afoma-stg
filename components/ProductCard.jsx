@@ -62,6 +62,7 @@ const ProductCardComponent = memo(({ data }) => {
               <Link
                 href={`${path}/${data?.slug}`}
                 className="opacity-0 group-hover:opacity-100 transition-opacity buttonprimary"
+                prefetch={true}
               >
                 Shop Now
                 <svg
@@ -84,7 +85,7 @@ const ProductCardComponent = memo(({ data }) => {
           </div>
         </div>
         <p className="text-sm lg:text-lg font-medium text-md mt-3 mb-1 text-blue-950 hover:text-primary line-clamp-1">
-          <Link href={`${path}/${processedData?.slug}`}>{processedData?.productName}</Link>
+          <Link href={`${path}/${processedData?.slug}`} prefetch={true}>{processedData?.productName}</Link>
         </p>
       </div>
       <div>

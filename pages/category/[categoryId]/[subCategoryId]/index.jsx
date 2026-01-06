@@ -31,9 +31,10 @@ const Shop = ({ cart, pageData, addToCart }) => {
   };
 
   useEffect(() => {
+    // Non-blocking fetch - allows instant route changes
     const fetchData = async () => {
       try {
-        setLoading(true);
+        // Removed setLoading(true) - no blocking state
         let id =
           process.env.NEXT_PUBLIC_BASE_URL ==
           "https://development.afomamarketplace.com"
@@ -46,6 +47,7 @@ const Shop = ({ cart, pageData, addToCart }) => {
               headers: {
                 "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
               },
+              timeout: 5000, // Fast timeout
             })
             .get(
               `${process.env.NEXT_PUBLIC_BASE_URL}/products/search/related/${id}`
@@ -60,7 +62,7 @@ const Shop = ({ cart, pageData, addToCart }) => {
                 )
               : [];
             setCategoryName(response.data.category?.name);
-            pushEventViewSearchList(products, id)
+            pushEventViewSearchList(approvedProducts, id)
             setProducts(approvedProducts);
             setError(false);
           } else {
@@ -81,12 +83,12 @@ const Shop = ({ cart, pageData, addToCart }) => {
           console.error("Error:", error);
           setError(true);
         }
-      } finally {
-        setLoading(false);
       }
+      // Removed setLoading(false) - no blocking loading state
     };
 
-    fetchData(); // Fetch data on component mount or when categoryID changes
+    // Defer fetch to next tick - allows route to change instantly
+    setTimeout(fetchData, 0);
   }, [subCategoryID]);
 
   const pushEventViewSearchList = (products, id) => {
@@ -151,48 +153,43 @@ const Shop = ({ cart, pageData, addToCart }) => {
           </div>) : ""}
 
           <div className="pb-5 mb-8 flex flex-col md:flex-row items-start md:justify-between gap-4 border-b border-[#D8D8D8] mt-4">
-            {loading ? (
-              <p>Loading...</p>
-            ) : (
-              <>
-                <h2 className={`text-2xl md:text-3xl xl:text-4xl xl:leading-[60px] tracking-[-0.72px] xl:tracking-[-0.96px] text-blue-950 text-left noto-font mt-8`}>
-                {pageData?.h2 ? pageData?.h2 : categoryName}
-                </h2>
-                {/* {products && (
-                  <p className="text-blue-950 mt-5">{products.length} results</p>
-                )} */}
-              </>
-            )}
+            {/* Remove blocking loading - show immediately */}
+            <>
+              <h2 className={`text-2xl md:text-3xl xl:text-4xl xl:leading-[60px] tracking-[-0.72px] xl:tracking-[-0.96px] text-blue-950 text-left noto-font mt-8`}>
+              {pageData?.h2 ? pageData?.h2 : categoryName || "Products"}
+              </h2>
+              {/* {products && (
+                <p className="text-blue-950 mt-5">{products.length} results</p>
+              )} */}
+            </>
           </div>
 
           <div className="flex flex-col">
             {" "}
             <div>
-              {!loading ? (
-                <>
-                  {error && <p>Error - Something went wrong!</p>}
-                  {products && products.length > 0 ? (
-                    <div className="flex flex-wrap gap-8 mb-4 md:mb-9 xl:mb-12 justify-center">
-                      {products.slice(0, visibleProducts).map((data) => (
-                        <div key={data._id}>
-                          <ProductCardComponent data={data} />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center justify-center flex items-center mb-5 md:mb-9">
-                      <Image
-                        src={"/Coming Soon - AFOMA Marketplace.png"}
-                        alt="Coming Soon"
-                        height={466}
-                        width={976}
-                      />
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p>Loading...</p>
-              )}
+              {/* Remove blocking loading state - render immediately */}
+              <>
+                {error && <p>Error - Something went wrong!</p>}
+                {products && products.length > 0 ? (
+                  <div className="flex flex-wrap gap-8 mb-4 md:mb-9 xl:mb-12 justify-center">
+                    {products.slice(0, visibleProducts).map((data) => (
+                      <div key={data._id}>
+                        <ProductCardComponent data={data} />
+                      </div>
+                    ))}
+                  </div>
+                ) : products && products.length === 0 && !error ? (
+                  <div className="text-center justify-center flex items-center mb-5 md:mb-9">
+                    <Image
+                      src={"/Coming Soon - AFOMA Marketplace.png"}
+                      alt="Coming Soon"
+                      height={466}
+                      width={976}
+                      loading="lazy"
+                    />
+                  </div>
+                ) : null}
+              </>
               <div>
                 <div className="flex justify-center">
                   {products && visibleProducts < products.length && (

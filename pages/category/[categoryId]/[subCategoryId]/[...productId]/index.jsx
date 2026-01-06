@@ -625,41 +625,52 @@ function ProductDetail({ product, pageData }) {
       });
   };
 
+  // Non-blocking fetch for recently viewed - doesn't block route changes
   useEffect(() => {
-    if (product) {
-      const viewed = JSON.parse(localStorage.getItem("recentlyViewed")) || [];
-      const updated = [
-        product._id,
-        ...viewed.filter((id) => id !== product._id),
-      ];
-      localStorage.setItem(
-        "recentlyViewed",
-        JSON.stringify(updated.slice(0, 5))
-      ); // Keep last 3
-      if (updated.length > 2) {
-        const fetchRecentlyViewed = async () => {
+    if (!product?._id) return;
+    
+    // Update localStorage immediately (synchronous, no blocking)
+    const viewed = JSON.parse(localStorage.getItem("recentlyViewed") || "[]");
+    const updated = [
+      product._id,
+      ...viewed.filter((id) => id !== product._id),
+    ];
+    localStorage.setItem(
+      "recentlyViewed",
+      JSON.stringify(updated.slice(0, 5))
+    );
+    
+    // Fetch in background - non-blocking, doesn't prevent route changes
+    if (updated.length > 1) {
+      // Use requestIdleCallback for non-critical data fetching
+      const fetchRecentlyViewed = async () => {
+        try {
           const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/products/byIds/${updated.join(
-              ","
-            )}`,
+            `${process.env.NEXT_PUBLIC_BASE_URL}/products/byIds/${updated.join(",")}`,
             {
               headers: {
                 "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
               },
+              timeout: 5000, // Fast timeout to not block
             }
           );
-          if (response.data.length > 0) {
+          if (response?.data?.length > 0) {
             setRecentlyViewedProducts(
-              response?.data
-                ?.filter((data) => data?._id !== product?._id)
+              response.data
+                .filter((data) => data?._id !== product?._id)
                 .slice(0, 3)
             );
           }
-        };
-        fetchRecentlyViewed();
-      }
+        } catch (error) {
+          // Silently fail - don't block UI
+          console.warn("Failed to load recently viewed:", error);
+        }
+      };
+      
+      // Use setTimeout to defer to next tick, allowing route to change instantly
+      setTimeout(fetchRecentlyViewed, 0);
     }
-  }, [product]);
+  }, [product?._id]);
 
   useEffect(() => {
     if (product && product?.status === 0) {
@@ -732,9 +743,10 @@ function ProductDetail({ product, pageData }) {
         fetchProductRelate();
       }
     } else {
+      // Non-blocking fetch - allows instant route changes
       const fetchData = async () => {
         try {
-          setLoading(true);
+          // Removed setLoading(true) - no blocking state
           let id =
             process.env.NEXT_PUBLIC_BASE_URL ==
             "https://development.afomamarketplace.com"
@@ -747,6 +759,7 @@ function ProductDetail({ product, pageData }) {
                 headers: {
                   "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
                 },
+                timeout: 5000, // Fast timeout
               })
               .get(
                 `${process.env.NEXT_PUBLIC_BASE_URL}/products/search/related/${id}`
@@ -783,12 +796,12 @@ function ProductDetail({ product, pageData }) {
             console.error("Error:", error);
             setError(true);
           }
-        } finally {
-          setLoading(false);
         }
+        // Removed setLoading(false) - no blocking loading state
       };
 
-      fetchData(); // Fetch data on component mount or when categoryID changes
+      // Defer fetch to next tick - allows route to change instantly
+      setTimeout(fetchData, 0);
     }
   }, [isProduct, productId]);
 
@@ -2827,22 +2840,26 @@ function ProductDetail({ product, pageData }) {
                 </div>
               )}
 
-              {recentlyViewedProducts && recentlyViewedProducts.length > 0 && (
-                <div className="mb-8 md:mb-10 xl:mb-14">
-                  <h2
-                    className={`text-blue-950 text-center lg:text-start md:ml-4 lg:ml-0 text-2xl lg:tracking-[-0.72px] mb-6 md:mb-6 noto-font`}
-                  >
-                    Recently Viewed
-                  </h2>
-                  <div className="grid lg:grid-cols-3 md:grid-cols-2 justify-center gap-9 mb-4 md:mb-9">
-                    {recentlyViewedProducts.map((data) => (
+              {/* Recently Viewed - Always render section, load content in background */}
+              <div className="mb-8 md:mb-10 xl:mb-14">
+                <h2
+                  className={`text-blue-950 text-center lg:text-start md:ml-4 lg:ml-0 text-2xl lg:tracking-[-0.72px] mb-6 md:mb-6 noto-font`}
+                >
+                  Recently Viewed
+                </h2>
+                <div className="grid lg:grid-cols-3 md:grid-cols-2 justify-center gap-9 mb-4 md:mb-9">
+                  {recentlyViewedProducts && recentlyViewedProducts.length > 0 ? (
+                    recentlyViewedProducts.map((data) => (
                       <div key={data._id}>
                         <ProductCardComponent data={data} />
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    // Show placeholder or nothing while loading - doesn't block route
+                    null
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </section>
 
@@ -3070,48 +3087,43 @@ function ProductDetail({ product, pageData }) {
           <section id="products" className="bg-white ">
             <div className="max-w-screen-xl mx-auto px-4 2 py-8 md:py-10 lg:py-18">
               <div className="pb-5 mb-8 flex flex-col md:flex-row items-start md:justify-between gap-4 border-b border-[#D8D8D8]">
-                {loading ? (
-                  <p>Loading...</p>
-                ) : (
-                  <>
-                    <h2 className="text-blue-950 xl:tracking-[-0.72px] text-2xl lg:text-4xl">
-                      {categoryName}
-                    </h2>
-                    {products && (
-                      <p className="text-blue-950">{products.length} results</p>
-                    )}
-                  </>
-                )}
+                {/* Remove blocking loading - show immediately */}
+                <>
+                  <h2 className="text-blue-950 xl:tracking-[-0.72px] text-2xl lg:text-4xl">
+                    {categoryName || "Products"}
+                  </h2>
+                  {products && products.length > 0 && (
+                    <p className="text-blue-950">{products.length} results</p>
+                  )}
+                </>
               </div>
 
               <div className="flex flex-col">
                 {" "}
                 <div>
-                  {!loading ? (
-                    <>
-                      {error && <p>Error - Something went wrong!</p>}
-                      {products && products.length > 0 ? (
-                        <div className="flex flex-wrap gap-8 mb-4 md:mb-9 xl:mb-12 justify-center">
-                          {products.slice(0, visibleProducts).map((data) => (
-                            <div key={data._id}>
-                              <ProductCardComponent data={data} />
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center justify-center flex items-center mb-5 md:mb-9">
-                          <Image
-                            src={"/Coming Soon - AFOMA Marketplace.png"}
-                            alt="Coming Soon"
-                            height={466}
-                            width={976}
-                          />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <p>Loading...</p>
-                  )}
+                  {/* Remove blocking loading state - render immediately */}
+                  <>
+                    {error && <p>Error - Something went wrong!</p>}
+                    {products && products.length > 0 ? (
+                      <div className="flex flex-wrap gap-8 mb-4 md:mb-9 xl:mb-12 justify-center">
+                        {products.slice(0, visibleProducts).map((data) => (
+                          <div key={data._id}>
+                            <ProductCardComponent data={data} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : products && products.length === 0 && !error ? (
+                      <div className="text-center justify-center flex items-center mb-5 md:mb-9">
+                        <Image
+                          src={"/Coming Soon - AFOMA Marketplace.png"}
+                          alt="Coming Soon"
+                          height={466}
+                          width={976}
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : null}
+                  </>
                   <div>
                     <div className="flex justify-center">
                       {products && visibleProducts < products.length && (
