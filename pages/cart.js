@@ -12,7 +12,7 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 //import { Noto_Serif } from "next/font/google";
 import Head from "next/head";
 import Link from "next/link";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Select from "react-select";
 import toast from "react-hot-toast";
 import * as Yup from "yup";
@@ -61,13 +61,13 @@ const Cart = ({
 
   const cartUpdatedInternally = useRef(false);
 
-  const formatPrice = (price) => {
+  const formatPrice = useCallback((price) => {
     const numericPrice = Number(price); // Ensure it's a number
     return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
-  };
+  }, []);
 
   const getRateOptions2 = async (carts) => {
     let isError = false;

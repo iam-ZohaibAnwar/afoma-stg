@@ -32,7 +32,7 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { Fragment, useEffect, useRef, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 // Lazy load Slider
@@ -48,14 +48,14 @@ const Slider = dynamic(() => {
 
 function ProductDetail({ cart, addToCart, product }) {
   const sliderRef = useRef(null);
-  // Use useEffect with productId dependency
-  const settings = {
+  // Memoize slider settings to prevent recreation on every render
+  const settings = useMemo(() => ({
     infinite: true,
     speed: 1000,
     dots: true,
     slidesToShow: 1,
     slidesToScroll: 1,
-  };
+  }), []);
 
   const [loadingProductCount, setLoadingProductCount] = useState(0);
   const [showMoreDescription, setShowMoreDescription] = useState(false);
@@ -82,54 +82,65 @@ function ProductDetail({ cart, addToCart, product }) {
 
   useEffect(() => {
     const fetchProductRelate = async () => {
-      if (product) {
-        setLoadingProductCount(true);
-        const sellerId = product.seller._id;
-        const variationsArray = product.variations;
-        if (product.images && product.images.length > 0) {
-          setSelectedImage(product.images[0]);
-        }
-        setVariations(
-          variationsArray.map((variation) => ({
-            ...variation,
-            totalPrice: variation.totalPrice || variation.price,
-            finalPrice: variation.finalPrice || variation.price,
-          }))
-        );
+      if (!product) return;
+      
+      setLoadingProductCount(true);
+      const sellerId = product.seller?._id;
+      const variationsArray = product.variations || [];
+      
+      if (product.images && product.images.length > 0) {
+        setSelectedImage(product.images[0]);
+      }
+      
+      setVariations(
+        variationsArray.map((variation) => ({
+          ...variation,
+          totalPrice: variation.totalPrice || variation.price,
+          finalPrice: variation.finalPrice || variation.price,
+        }))
+      );
+      
+      try {
         // Fetch the number of products for the seller
-        const countResponse = await getSellerProductCount(sellerId);
-        const approvedProducts = countResponse.data.filter(
-          (product) => product.productStatus === "Approved"
-        );
-        setProductCount(approvedProducts.length);
-        setAllProducts(approvedProducts);
-        setLoadingProductCount(false);
+        if (sellerId) {
+          const countResponse = await getSellerProductCount(sellerId);
+          const approvedProducts = countResponse.data?.filter(
+            (product) => product.productStatus === "Approved"
+          ) || [];
+          setProductCount(approvedProducts.length);
+          setAllProducts(approvedProducts);
+        }
+        
         // Fetch reviews
         getReviews();
         getAllReviews();
+      } catch (error) {
+        console.error("Error fetching product data:", error);
+      } finally {
+        setLoadingProductCount(false);
       }
     };
-    if (product) {
-      fetchProductRelate();
-    }
-  }, [product]);
+    
+    fetchProductRelate();
+  }, [product, getSellerProductCount, getReviews, getAllReviews]);
 
-  const getSellerProductCount = (sellerId) => {
-    const options = {
-      method: "GET",
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/products/by/${sellerId}`,
-      headers: {
-        "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-      },
-    };
-    return axios.request(options);
-  };
+  const getSellerProductCount = useCallback((sellerId) => {
+    if (!sellerId) return Promise.resolve({ data: [] });
+    return axios.get(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/products/by/${sellerId}`,
+      {
+        headers: {
+          "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+        },
+      }
+    );
+  }, []);
 
-  const toggleDescriptionVisibility = () => {
-    setShowMoreDescription(!showMoreDescription); // Toggle visibility
-  };
+  const toggleDescriptionVisibility = useCallback(() => {
+    setShowMoreDescription((prev) => !prev); // Toggle visibility
+  }, []);
 
-  const generateStarIcons = (rating) => {
+  const generateStarIcons = useCallback((rating) => {
     const fullStars = Math.floor(rating);
     const halfStar = rating % 1 !== 0;
     const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
@@ -165,9 +176,19 @@ function ProductDetail({ cart, addToCart, product }) {
     }
 
     return stars;
-  };
+  }, []);
 
-  const handleAttributeItemClick = (attribute, value) => {
+  const handleImageClick = useCallback((image) => {
+    setSelectedImage(image);
+    setSelectedVideo(null);
+  }, []);
+
+  const handleVideoClick = useCallback((video) => {
+    setSelectedVideo(video);
+    setSelectedImage(null);
+  }, []);
+
+  const handleAttributeItemClick = useCallback((attribute, value) => {
     // Update the selectedAttributes state when an attribute value is selected
     setSelectedAttributes((prevSelectedAttributes) => ({
       ...prevSelectedAttributes,
@@ -181,7 +202,7 @@ function ProductDetail({ cart, addToCart, product }) {
         handleImageClick({ imageUrl: filteredVariation.image });
       }
     }
-  };
+  }, [variations, handleImageClick]);
 
   // Customizable Product variations
   const attributeArray = [];
@@ -211,7 +232,7 @@ function ProductDetail({ cart, addToCart, product }) {
     });
   }
 
-  const getUniqueValues = (array, attribute) => {
+  const getUniqueValues = useCallback((array, attribute) => {
     const values = new Set();
     array.forEach((item) => {
       if (item && item[attribute] !== undefined) {
@@ -219,15 +240,20 @@ function ProductDetail({ cart, addToCart, product }) {
       }
     });
     return Array.from(values);
-  };
+  }, []);
 
-  const initialPrice =
-    variations && variations.length > 0 ? variations[0].finalPrice : null;
+  // Memoize initial prices
+  const initialPrice = useMemo(() => 
+    variations && variations.length > 0 ? variations[0].finalPrice : null,
+    [variations]
+  );
 
-  const initialActualPrice =
-    variations && variations.length > 0 ? variations[0].totalPrice : null;
+  const initialActualPrice = useMemo(() =>
+    variations && variations.length > 0 ? variations[0].totalPrice : null,
+    [variations]
+  );
 
-  const getPriceForSelectedAttributes = () => {
+  const getPriceForSelectedAttributes = useCallback(() => {
     const selectedVariation = variations.find((variation) =>
       Object.entries(selectedAttributes).every(
         ([key, value]) => variation[key] === value
@@ -256,9 +282,9 @@ function ProductDetail({ cart, addToCart, product }) {
     } else {
       return initialPrice;
     }
-  };
+  }, [variations, selectedAttributes, initialPrice]);
 
-  const getActualPriceForSelectedAttributes = () => {
+  const getActualPriceForSelectedAttributes = useCallback(() => {
     const selectedVariation = variations.find((variation) =>
       Object.entries(selectedAttributes).every(
         ([key, value]) => variation[key] === value
@@ -288,38 +314,47 @@ function ProductDetail({ cart, addToCart, product }) {
     } else {
       return initialActualPrice;
     }
-  };
+  }, [variations, selectedAttributes, initialActualPrice]);
 
-  const calculatedPrice =
+  // Memoize calculated prices
+  const calculatedPrice = useMemo(() =>
     Object.keys(selectedAttributes).length > 0
       ? getPriceForSelectedAttributes() || " "
-      : initialPrice || " ";
+      : initialPrice || " ",
+    [selectedAttributes, getPriceForSelectedAttributes, initialPrice]
+  );
 
-  const calculatedActualPrice =
+  const calculatedActualPrice = useMemo(() =>
     Object.keys(selectedAttributes).length > 0
       ? getActualPriceForSelectedAttributes() || " "
-      : initialActualPrice || " ";
+      : initialActualPrice || " ",
+    [selectedAttributes, getActualPriceForSelectedAttributes, initialActualPrice]
+  );
 
   const [count, setCount] = useState(1);
 
-  const totalQuantity = calculateTotalQuantity(selectedAttributes, variations);
-
-  const increment = () => {
+  const increment = useCallback(() => {
     // Limit increment if count is less than total quantity
-    if (count < totalQuantity) {
-      setCount(count + 1);
-    }
-  };
+    setCount((prevCount) => {
+      if (prevCount < totalQuantity) {
+        return prevCount + 1;
+      }
+      return prevCount;
+    });
+  }, [totalQuantity]);
 
   // Decrement function
-  const decrement = () => {
+  const decrement = useCallback(() => {
     // Limit decrement if count is greater than 1
-    if (count > 1) {
-      setCount(count - 1);
-    }
-  };
+    setCount((prevCount) => {
+      if (prevCount > 1) {
+        return prevCount - 1;
+      }
+      return prevCount;
+    });
+  }, []);
 
-  function calculateTotalQuantity(selectedAttributes, variations) {
+  const calculateTotalQuantity = useCallback((selectedAttributes, variations) => {
     // Check if there are selected attributes and variations
     if (!selectedAttributes || !variations || variations.length === 0) {
       return 0;
@@ -337,9 +372,14 @@ function ProductDetail({ cart, addToCart, product }) {
 
     // Return the quantity if a matching variation is found
     return matchingVariation ? matchingVariation.quantity : 0;
-  }
+  }, []);
 
-  const calculateInventory = () => {
+  const totalQuantity = useMemo(() => 
+    calculateTotalQuantity(selectedAttributes, variations),
+    [selectedAttributes, variations, calculateTotalQuantity]
+  );
+
+  const calculateInventory = useCallback(() => {
     if (variations) {
       const selectedVariation = variations.find((variation) =>
         Object.entries(selectedAttributes).every(
@@ -349,123 +389,132 @@ function ProductDetail({ cart, addToCart, product }) {
 
       return selectedVariation ? selectedVariation.inventory : "Out of Stock";
     }
-  };
+    return "Out of Stock";
+  }, [variations, selectedAttributes]);
 
-  const incrementS = () => {
-    if (countS < product.quantity) {
-      setCountS(countS + 1);
+  const incrementS = useCallback(() => {
+    setCountS((prevCount) => {
+      if (prevCount < product?.quantity) {
+        return prevCount + 1;
+      }
+      return prevCount;
+    });
+  }, [product?.quantity]);
+
+  const decrementS = useCallback(() => {
+    setCountS((prevCount) => {
+      if (prevCount > 1) {
+        return prevCount - 1;
+      }
+      return prevCount;
+    });
+  }, []);
+
+  const handleCopyLinkClick = useCallback(() => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(currentUrl);
+      toast.success("Link copied to clipboard!");
+      setIsShared(false);
     }
-  };
-
-  const decrementS = () => {
-    if (countS > 1) {
-      setCountS(countS - 1);
-    }
-  };
-
-  const handleCopyLinkClick = () => {
-    navigator.clipboard.writeText(currentUrl);
-    toast.success("Link copied to clipboard!");
-    setIsShared(false);
-  };
+  }, [currentUrl]);
 
   useEffect(() => {
     setCount(1); // Reset count to 1 whenever variations change
   }, [selectedAttributes]);
 
-  const handleImageClick = (image) => {
-    setSelectedImage(image);
-    setSelectedVideo(null);
-  };
-
-  const handleVideoClick = (video) => {
-    setSelectedVideo(video);
-    setSelectedImage(null);
-  };
 
   const reviewsPerPage = 2; // Number of reviews per page
 
-  // Calculate indices for slicing
-  const indexOfLastReview = currentPage * reviewsPerPage;
-  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  // Memoize review calculations
+  const currentReviews = useMemo(() => {
+    if (!allReviews) return [];
+    const indexOfLastReview = currentPage * reviewsPerPage;
+    const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+    return allReviews.slice(indexOfFirstReview, indexOfLastReview);
+  }, [allReviews, currentPage, reviewsPerPage]);
 
-  // Slicing current reviews
-  const currentReviews = allReviews?.slice(
-    indexOfFirstReview,
-    indexOfLastReview
+  // Memoize pagination calculations
+  const totalPages = useMemo(() => 
+    Math.ceil(allReviews ? allReviews.length / reviewsPerPage : 0),
+    [allReviews, reviewsPerPage]
   );
 
-  // Calculate the total number of pages
-  const totalPages = Math.ceil(
-    allReviews ? allReviews.length / reviewsPerPage : 0
-  );
-
-  // Generate page numbers
-  const pageNumbers = Array.from(
-    { length: totalPages },
-    (_, index) => index + 1
+  // Memoize page numbers
+  const pageNumbers = useMemo(() => 
+    Array.from({ length: totalPages }, (_, index) => index + 1),
+    [totalPages]
   );
 
   // Handle previous page
-  const handlePreviousPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
+  const handlePreviousPage = useCallback(() => {
+    setCurrentPage((prevPage) => {
+      if (prevPage > 1) return prevPage - 1;
+      return prevPage;
+    });
+  }, []);
 
   // Handle next page
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
+  const handleNextPage = useCallback(() => {
+    setCurrentPage((prevPage) => {
+      if (prevPage < totalPages) return prevPage + 1;
+      return prevPage;
+    });
+  }, [totalPages]);
 
-  const getAllReviews = async () => {
-    const options = {
-      method: "GET",
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/reviews/single/${product._id}`,
-      headers: {
-        "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-      },
-    };
-    axios
-      .request(options)
-      .then(function (response) {
-        if (response && response.data) {
-          const sortedReviews = response.data.sort((a, b) => {
-            const timestampA = new Date(a.createdAt).getTime();
-            const timestampB = new Date(b.createdAt).getTime();
-            return timestampB - timestampA;
-          });
-          setAllReviews(response.data);
-        } else {
-          setAllReviews([]);
+  const getAllReviews = useCallback(async () => {
+    if (!product?._id) return;
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/reviews/single/${product._id}`,
+        {
+          headers: {
+            "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+          },
         }
-      })
-      .catch(function (error) {
+      );
+      if (response && response.data) {
+        const sortedReviews = response.data.sort((a, b) => {
+          const timestampA = new Date(a.createdAt).getTime();
+          const timestampB = new Date(b.createdAt).getTime();
+          return timestampB - timestampA;
+        });
+        setAllReviews(sortedReviews);
+      } else {
         setAllReviews([]);
-        console.error(error);
-      });
-  };
+      }
+    } catch (error) {
+      console.error("Error fetching all reviews:", error);
+      setAllReviews([]);
+    }
+  }, [product?._id]);
 
-  const getReviews = () => {
-    const options = {
-      method: "GET",
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/reviews/average-review/${product._id}`,
-      headers: {
-        "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-      },
-    };
+  const getReviews = useCallback(() => {
+    if (!product?._id) return;
     axios
-      .request(options)
+      .get(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/reviews/average-review/${product._id}`,
+        {
+          headers: {
+            "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+          },
+        }
+      )
       .then(function (response) {
         const reviews = response.data;
         setReviews(reviews);
       })
       .catch(function (error) {
-        console.error(error);
+        console.error("Error fetching reviews:", error);
       });
-  };
+  }, [product?._id]);
 
-  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Check out this product: ${product?.productName} ${currentUrl}`
-  )}`;
+  // Memoize share URLs
+  const whatsappShareUrl = useMemo(() => 
+    `https://wa.me/?text=${encodeURIComponent(
+      `Check out this product: ${product?.productName} ${currentUrl}`
+    )}`,
+    [product?.productName, currentUrl]
+  );
 
   return (
     <>

@@ -1,22 +1,30 @@
 import Image from 'next/image'
 import { useRouter } from 'next/router';
-import { memo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 const BestProductsCard = memo(({ data, userCurrency, userCountry}) => {
   const router = useRouter();
-  const formatPrice = (price) => {
+  
+  const formatPrice = useCallback((price) => {
     const numericPrice = Number(price); // Ensure it's a number
     return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
-  };
+  }, []);
+
+  const handleClick = useCallback(() => {
+    router.push(`category/${data?.Category?.slug}/${data?.SubCategory?.slug}${data?.childCategory?.slug ? "/" + data?.childCategory?.slug : ""}/${data?.slug}`);
+  }, [data?.Category?.slug, data?.SubCategory?.slug, data?.childCategory?.slug, data?.slug, router]);
+
+  const productName = useMemo(() => {
+    const name = data?.productName || '';
+    return name.length > 18 ? name.slice(0, 18) + '...' : name;
+  }, [data?.productName]);
   return (
     <div 
     className="flex flex-col items-center mx-3 p-0 bg-white shadow-lg rounded-lg hover:shadow-xl hover:scale-105 hover:bg-gray-50 transition-all duration-300 w-full min-w-[220px] max-w-[320px] h-[400px] lg:h-[500px] pb-5 cursor-pointer"
-    onClick={() => {
-      router.push(`category/${data?.Category?.slug}/${data?.SubCategory?.slug}${data?.childCategory?.slug ? "/" + data?.childCategory?.slug : ""}/${data?.slug}`);
-    }}
+    onClick={handleClick}
     >
       {/* Image that touches the card borders with sharp corners */}
       <div className="relative w-full h-80 mb-4 overflow-hidden group">
@@ -159,7 +167,7 @@ const BestProductsCard = memo(({ data, userCurrency, userCountry}) => {
     </div>
       
       <p className="text-base font-semibold text-gray-600 mt-2">{data?.Category?.name || "--"}</p>
-      <h3 className="text-lg font-bold text-gray-800 text-center truncate">{data.productName.length > 18 ? data.productName.slice(0, 18) + '...' : data.productName}</h3>
+      <h3 className="text-lg font-bold text-gray-800 text-center truncate">{productName}</h3>
       {/* <p className="text-lg font-bold text-gray-900 mt-2">{data?.productDetails?.price || "--"}</p> */}
       
       {/* New Flat Button Style */}

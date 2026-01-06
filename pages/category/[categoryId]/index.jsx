@@ -7,7 +7,7 @@ const ProductCardComponent = dynamic(() => import("@/components/ProductCard"), {
 import axios from "axios";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { categoryMapIdStg, categoryMapIdPrd } from "../../../lib/categoryMap";
 import Head from "next/head";
 
@@ -24,71 +24,12 @@ const Shop = ({ cart, pageData, addToCart }) => {
   let canonicalUrl = process.env.NEXT_PUBLIC_BASE_URL == "https://development.afomamarketplace.com"
                     ? `https://staging.afomamarketplace.com/category/${categoryID}`
                     : `https://afomamarketplace.com/category/${categoryID}`
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     setVisibleProducts((prev) => prev + 30);
-  };
+  }, []);
 
-  const isInitialRender = useRef(true);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        let id =
-          process.env.NEXT_PUBLIC_BASE_URL ==
-          "https://development.afomamarketplace.com"
-            ? categoryMapIdStg[categoryID.toLowerCase()]
-            : categoryMapIdPrd[categoryID.toLowerCase()];
-        if (id) {
-          // Make the API call using the categoryID
-          const response = await axios
-            .create({
-              headers: {
-                "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-              },
-            })
-            .get(
-              `${process.env.NEXT_PUBLIC_BASE_URL}/products/search/related/${id}`
-            );
-
-          if (response.data) {
-            // Check if response.data is defined
-            const approvedProducts = response.data.products
-              ? response.data.products.filter(
-                  (product) =>
-                    product.productStatus === "Approved" && product.status == 1
-                )
-              : [];
-            setCategoryName(response.data.category?.name);
-            setProducts(approvedProducts);
-            pushEventViewSearchList(approvedProducts, id)
-            setError(false);
-          } else {
-            // Handle the case when response.data is undefined
-            setProducts([]);
-            setError(true);
-          }
-        } else {
-          // Handle the case when categoryID is not available
-          setError(true);
-        }
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          // Handle 404 response
-          setProducts([]); // Set an empty array or handle it as per your requirements
-          setError(false);
-        } else {
-          console.error("Error:", error);
-          setError(true);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData(); // Fetch data on component mount or when categoryID changes
-  }, [categoryID]);
-
-  const pushEventViewSearchList = (products, id) => {
+  const pushEventViewSearchList = useCallback((products, id) => {
+    if (typeof window === 'undefined' || !window.dataLayer) return;
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ ecommerce: null });
     const items = products.map(product => {
@@ -108,12 +49,80 @@ const Shop = ({ cart, pageData, addToCart }) => {
       event: "view_item_list",
       item_list_id: id,
       item_list_name: categoryID,
-
       ecommerce: {
         items: items
       },
     });
-  }
+  }, [categoryID]);
+
+  // Memoize category ID lookup
+  const categoryMapId = useMemo(() => {
+    return process.env.NEXT_PUBLIC_BASE_URL === "https://development.afomamarketplace.com"
+      ? categoryMapIdStg
+      : categoryMapIdPrd;
+  }, []);
+
+  // Memoize visible products
+  const displayedProducts = useMemo(() => 
+    products.slice(0, visibleProducts),
+    [products, visibleProducts]
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!categoryID) return;
+      
+      try {
+        setLoading(true);
+        const id = categoryMapId[categoryID.toLowerCase()];
+        
+        if (!id) {
+          setError(true);
+          setLoading(false);
+          return;
+        }
+
+        // Make the API call using the categoryID
+        const axiosInstance = axios.create({
+          headers: {
+            "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+          },
+        });
+
+        const response = await axiosInstance.get(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/products/search/related/${id}`
+        );
+
+        if (response.data) {
+          const approvedProducts = response.data.products
+            ? response.data.products.filter(
+                (product) =>
+                  product.productStatus === "Approved" && product.status == 1
+              )
+            : [];
+          setCategoryName(response.data.category?.name);
+          setProducts(approvedProducts);
+          pushEventViewSearchList(approvedProducts, id);
+          setError(false);
+        } else {
+          setProducts([]);
+          setError(true);
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          setProducts([]);
+          setError(false);
+        } else {
+          console.error("Error:", error);
+          setError(true);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [categoryID, categoryMapId, pushEventViewSearchList]);
 
   return (
     <>
@@ -200,7 +209,7 @@ const Shop = ({ cart, pageData, addToCart }) => {
                   {error && <p>Error - Something went wrong!</p>}
                   {products && products.length > 0 ? (
                     <div className="flex flex-wrap gap-8 mb-4 md:mb-9 xl:mb-12 justify-center">
-                      {products.slice(0, visibleProducts).map((data) => (
+                      {displayedProducts.map((data) => (
                         <div
                           key={data._id}
                           onClick={() => {
