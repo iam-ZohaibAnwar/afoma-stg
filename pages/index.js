@@ -106,7 +106,11 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
     return calculateSurcharge(responseData, userInfo);
   }, [newArrivalData, userInfo]);
 
-  const reviews = Array.isArray(reviewsData) ? reviewsData : reviewsData.reviews || [];
+  const reviews = useMemo(() => {
+    if (!reviewsData) return [];
+    const responseData = Array.isArray(reviewsData) ? reviewsData : reviewsData?.reviews || [];
+    return responseData
+  }, [reviewsData]);
 
   const bestSellingCategory = useMemo(() => {
     if (!categoryData) return [];
