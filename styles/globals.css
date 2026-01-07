@@ -795,20 +795,34 @@ textarea {
   overflow: visible;
   white-space: nowrap;
 }
+/* Subtle top progress bar - non-blocking, only shows for slow navigations */
 .navigation-loader {
   position: fixed;
   top: 0;
-  bottom: 0;
   left: 0;
   right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #0006;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 600;
+  height: 3px;
+  background: transparent;
   z-index: 99999999;
+  pointer-events: none;
+}
+
+.navigation-loader-progress {
+  height: 100%;
+  background: linear-gradient(90deg, #f16217 0%, #ff8c42 50%, #f16217 100%);
+  background-size: 200% 100%;
+  animation: progress-shimmer 1.5s ease-in-out infinite;
+  transition: width 0.3s ease-out;
+  box-shadow: 0 0 10px rgba(241, 98, 23, 0.5);
+}
+
+@keyframes progress-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .ql-container {
