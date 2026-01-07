@@ -87,26 +87,33 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
   const bestSellingProducts = useMemo(() => {
     if (!bestSellingData) return [];
     const responseData = Array.isArray(bestSellingData) ? bestSellingData : bestSellingData.products;
-    const bestSelling = [];
-    responseData.forEach((data, index) => {
-      if (index < 4) bestSelling.push(data.productDetails);
-    });
+    // Backend now returns optimized 6-7 items, so use all items
+    const bestSelling = responseData.map((data) => data.productDetails || data).filter(Boolean);
     return calculateSurcharge(bestSelling);
   }, [bestSellingData]);
 
   const mostDiscountedProducts = useMemo(() => {
     if (!discountedData) return [];
     const responseData = Array.isArray(discountedData) ? discountedData : discountedData.products;
-    return calculateSurcharge(responseData);
+    // Handle both productDetails wrapper and direct product structure
+    const products = responseData.map((data) => data.productDetails || data).filter(Boolean);
+    return calculateSurcharge(products);
   }, [discountedData]);
 
   const newArrival = useMemo(() => {
     if (!newArrivalData) return [];
     const responseData = Array.isArray(newArrivalData) ? newArrivalData : newArrivalData.products;
-    return calculateSurcharge(responseData, userInfo);
+    // Handle both productDetails wrapper and direct product structure
+    const products = responseData.map((data) => data.productDetails || data).filter(Boolean);
+    return calculateSurcharge(products, userInfo);
   }, [newArrivalData, userInfo]);
 
-  const reviews = reviewsData || [];
+  // Handle reviews data - backend now returns optimized 6-7 items
+  const reviews = useMemo(() => {
+    if (!reviewsData) return [];
+    // Handle both array and object response structures
+    return Array.isArray(reviewsData) ? reviewsData : (reviewsData.reviews || reviewsData.data || []);
+  }, [reviewsData]);
 
   const bestSellingCategory = useMemo(() => {
     if (!categoryData) return [];
