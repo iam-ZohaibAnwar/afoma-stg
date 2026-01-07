@@ -119,7 +119,7 @@ const DiscountedItemCard = memo(({ product, userCurrency, userCountry }) => {
         </div>
       )}
 
-      {product.seller?.country.toLowerCase() == userCountry?.toLowerCase() &&
+      {product.seller?.country?.toLowerCase() == userCountry?.toLowerCase() &&
         product.freeDelivery && (
           <div>
             {/* Price Section */}
