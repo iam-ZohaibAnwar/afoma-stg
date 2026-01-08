@@ -106,7 +106,7 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
     return calculateSurcharge(responseData, userInfo);
   }, [newArrivalData, userInfo]);
 
-  const reviews = Array.isArray(reviewsData) ? reviewsData : reviewsData.reviews || [];
+  const reviews = reviewsData || [];
 
   const bestSellingCategory = useMemo(() => {
     if (!categoryData) return [];
@@ -152,7 +152,7 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
 
 
 
-  const getSettingsAndDetails = useCallback(async (abortSignal) => {
+  const getSettingsAndDetails = useCallback(async () => {
     // Non-blocking fetch - doesn't prevent route changes
     try {
       const axiosInstance = axios.create({
@@ -160,7 +160,6 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
           "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
         },
         timeout: 5000, // Fast timeout
-        signal: abortSignal, // Add abort signal to cancel request
       });
 
       const response = await axiosInstance.get(
@@ -202,10 +201,6 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
         }
       }
     } catch (error) {
-      // Ignore cancellation errors - they're expected when navigating away
-      if (error.name === 'CanceledError' || error.name === 'AbortError' || error.code === 'ERR_CANCELED' || axios.isCancel?.(error)) {
-        return; // Silently ignore cancellation
-      }
       console.error("Error fetching settings:", error);
     }
     // Removed setLoading - non-blocking
@@ -219,19 +214,10 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
     setUserCurrency(userCurrency);
     setUserCountry(userInfo?.country);
     getSellerInfo();
-    
-    // Create AbortController to cancel request on unmount
-    const abortController = new AbortController();
-    
     // Defer non-critical data fetching - allows instant route changes
     setTimeout(() => {
-      getSettingsAndDetails(abortController.signal);
+      getSettingsAndDetails();
     }, 0);
-    
-    // Cleanup: cancel request if component unmounts
-    return () => {
-      abortController.abort();
-    };
   }, [getSellerInfo, getSettingsAndDetails]);
 
   const handleSubmit = useCallback(async (e) => {

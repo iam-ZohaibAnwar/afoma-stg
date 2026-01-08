@@ -90,7 +90,7 @@ const BestProductsCard = memo(({ data, userCurrency, userCountry}) => {
             </div>
             )}
 
-            {data.seller?.country?.toLowerCase() == userCountry?.toLowerCase() && data.freeDelivery && (
+            {data.seller.country.toLowerCase() == userCountry?.toLowerCase() && data.freeDelivery && (
             <div>
                 {/* Price Section */}
                 {data.productType !== "Customizable" && (
@@ -127,7 +127,7 @@ const BestProductsCard = memo(({ data, userCurrency, userCountry}) => {
             </div>
             )}
 
-            {data.seller?.country?.toLowerCase() == userCountry?.toLowerCase() && !data.freeDelivery && (
+            {data.seller.country.toLowerCase() == userCountry?.toLowerCase() && !data.freeDelivery && (
             <div>
                 {/* Price Section */}
                 {data.productType !== "Customizable" && (
