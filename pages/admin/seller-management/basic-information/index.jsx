@@ -1,8 +1,9 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import { genderList } from "@/lib/select-option";
 import axios from "axios";
 
-import AdminSellerDetail from "@/components/AdminSellerDetail";
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const AdminSellerDetail = dynamic(() => import("@/components/AdminSellerDetail"), { ssr: false });
 import { faAngleLeft } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Menu, Transition } from "@headlessui/react";

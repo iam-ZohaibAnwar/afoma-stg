@@ -1,5 +1,7 @@
-import GenerateMetaTags from "@/components/GenerateMetaTags";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const GenerateMetaTags = dynamic(() => import("@/components/GenerateMetaTags"), { ssr: false });
 import { inventoryList } from "@/lib/select-option";
 import { faImage } from "@fortawesome/pro-light-svg-icons";
 import { faAngleLeft, faCircleVideo } from "@fortawesome/pro-regular-svg-icons";

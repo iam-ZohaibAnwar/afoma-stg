@@ -1,5 +1,8 @@
-import Layout from "@/components/Layout";
-import SellerDetail from "@/components/SellerDetail";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const SellerDetail = dynamic(() => import("@/components/SellerDetail"), { ssr: false });
 import { genderList } from "@/lib/select-option";
 import { faAngleLeft } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

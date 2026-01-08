@@ -1,8 +1,11 @@
-import ConfirmModal from "@/components/ConfirmModal";
-import Footer from "@/components/Footer";
-import Footer2 from "@/components/Footer2";
-import Miniheader from "@/components/Miniheader";
-import Modal from "@/components/NewAddressModal";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const ConfirmModal = dynamic(() => import("@/components/ConfirmModal"), { ssr: false });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
+const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
+const Modal = dynamic(() => import("@/components/NewAddressModal"), { ssr: false });
 import { faAngleRight } from "@fortawesome/pro-light-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";

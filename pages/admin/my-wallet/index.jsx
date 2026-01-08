@@ -1,4 +1,6 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { faAngleLeft, faAngleRight } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,7 +10,6 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import jwt from "jsonwebtoken";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

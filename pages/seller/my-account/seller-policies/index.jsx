@@ -1,6 +1,8 @@
-import BannerImageCropperModal from "@/components/BannerImageCropperModal";
-import Layout from "@/components/Layout";
-import SellerDetail from "@/components/SellerDetail";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const SellerDetail = dynamic(() => import("@/components/SellerDetail"), { ssr: false });
+const BannerImageCropperModal = dynamic(() => import("@/components/BannerImageCropperModal"), { ssr: false });
 import { faAngleLeft, faTrashCan } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";

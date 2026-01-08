@@ -9,7 +9,9 @@ import React, { useEffect, useState } from "react";
 
 import { faAngleDown } from "@fortawesome/pro-light-svg-icons";
 
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import axios from "axios";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });

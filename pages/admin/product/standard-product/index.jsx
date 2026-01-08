@@ -1,8 +1,4 @@
-import GenerateAiDescription from "@/components/GenerateAiDescription";
-import GenerateAiHarmonizedCode from "@/components/GenerateAiHarmonizedCode";
-import GenerateMetaTags from "@/components/GenerateMetaTags";
-import Layout from "@/components/Layout";
-import ProductImageCropperModal from "@/components/ProductImageCropperModal";
+import dynamic from "next/dynamic";
 import { inventoryList } from "@/lib/select-option";
 import { getPrePopulatedAIProductData } from "@/utils/keywordUtils";
 import { faImage, faXmark } from "@fortawesome/pro-light-svg-icons";
@@ -19,7 +15,13 @@ import toast from "react-hot-toast";
 import Select from "react-select";
 import { mixed, object, string } from "yup";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import ImageListDnD from "@/components/ImageDragnDrop";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const GenerateAiDescription = dynamic(() => import("@/components/GenerateAiDescription"), { ssr: false });
+const GenerateAiHarmonizedCode = dynamic(() => import("@/components/GenerateAiHarmonizedCode"), { ssr: false });
+const GenerateMetaTags = dynamic(() => import("@/components/GenerateMetaTags"), { ssr: false });
+const ProductImageCropperModal = dynamic(() => import("@/components/ProductImageCropperModal"), { ssr: false });
+const ImageListDnD = dynamic(() => import("@/components/ImageDragnDrop"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 const Index = ({ keywords, prePopulatedData }) => {

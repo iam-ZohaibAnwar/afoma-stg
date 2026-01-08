@@ -11,12 +11,14 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState, Fragment } from "react";
 //import { Noto_Serif } from "next/font/google";
 import { Menu, Transition } from "@headlessui/react";
-import SellerInfoLayout from "@/components/SellerInfoLayout";
+import dynamic from "next/dynamic";
 import { faAngleDown, faCircleInfo } from "@fortawesome/pro-light-svg-icons";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import Image from "next/image";
-import SellerProduct from "@/components/SellerProduct";
-import Layout from "@/components/Layout";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const SellerInfoLayout = dynamic(() => import("@/components/SellerInfoLayout"), { ssr: false });
+const SellerProduct = dynamic(() => import("@/components/SellerProduct"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

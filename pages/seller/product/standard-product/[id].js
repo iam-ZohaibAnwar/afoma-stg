@@ -1,4 +1,4 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import { inventoryList } from "@/lib/select-option";
 import { faImage } from "@fortawesome/pro-light-svg-icons";
 import { faAngleLeft, faCircleVideo } from "@fortawesome/pro-regular-svg-icons";
@@ -11,8 +11,10 @@ import { useEffect, useState } from "react";
 import Select from "react-select";
 
 import Head from "next/head";
-import GenerateAiHarmonizedCode from "@/components/GenerateAiHarmonizedCode";
-import GenerateMetaTags from "@/components/GenerateMetaTags";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const GenerateAiHarmonizedCode = dynamic(() => import("@/components/GenerateAiHarmonizedCode"), { ssr: false });
+const GenerateMetaTags = dynamic(() => import("@/components/GenerateMetaTags"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 const Index = ({ id }) => {

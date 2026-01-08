@@ -9,8 +9,10 @@ import { config } from "@fortawesome/fontawesome-svg-core";
 import "@/styles/globals.css";
 
 import { ThirdwebProvider } from "thirdweb/react";
-import NavigationLoader from "@/components/NavigationLoader";
+import dynamic from "next/dynamic";
 import { getGeoIP } from "@/lib/geoIP";
+
+const NavigationLoader = dynamic(() => import("@/components/NavigationLoader"), { ssr: false });
 import Script from "next/script";
 
 import { SidebarProvider } from "@/context/sidebarContext";

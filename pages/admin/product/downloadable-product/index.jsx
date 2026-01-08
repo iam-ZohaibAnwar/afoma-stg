@@ -1,8 +1,10 @@
-import GenerateAiDescription from "@/components/GenerateAiDescription";
-import GenerateMetaTags from "@/components/GenerateMetaTags";
-import ImageListDnD from "@/components/ImageDragnDrop";
-import Layout from "@/components/Layout";
-import ProductImageCropperModal from "@/components/ProductImageCropperModal";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const GenerateAiDescription = dynamic(() => import("@/components/GenerateAiDescription"), { ssr: false });
+const GenerateMetaTags = dynamic(() => import("@/components/GenerateMetaTags"), { ssr: false });
+const ImageListDnD = dynamic(() => import("@/components/ImageDragnDrop"), { ssr: false });
+const ProductImageCropperModal = dynamic(() => import("@/components/ProductImageCropperModal"), { ssr: false });
 import { inventoryList } from "@/lib/select-option";
 import { getPrePopulatedAIProductData } from "@/utils/keywordUtils";
 import {

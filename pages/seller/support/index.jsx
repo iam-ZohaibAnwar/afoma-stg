@@ -15,9 +15,11 @@ import { faAngleDown, faCircleInfo } from "@fortawesome/pro-light-svg-icons";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { titleNameList } from "@/lib/select-option";
 import Select from "react-select";
-import SellerProduct from "@/components/SellerProduct";
-import Layout from "@/components/Layout";
-import ComingSoonSeller from "@/components/ComingSoonSeller";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const SellerProduct = dynamic(() => import("@/components/SellerProduct"), { ssr: false });
+const ComingSoonSeller = dynamic(() => import("@/components/ComingSoonSeller"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

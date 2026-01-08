@@ -1,4 +1,4 @@
-import Miniheader from "@/components/Miniheader";
+import dynamic from "next/dynamic";
 import { faAngleDown, faAngleRight } from "@fortawesome/pro-light-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
@@ -13,7 +13,9 @@ import "react-phone-input-2/lib/style.css";
 import * as yup from "yup";
 import Image from "next/image";
 import { Menu, Transition } from "@headlessui/react";
-import Footer2 from "@/components/Footer2";
+
+const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
 import { useState } from "react";
 import Head from "next/head";
 

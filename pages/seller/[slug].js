@@ -1,5 +1,7 @@
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import dynamic from "next/dynamic";
+
+const Header = dynamic(() => import("@/components/Header"), { ssr: false });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
 import { faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

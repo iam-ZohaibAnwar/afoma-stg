@@ -1,4 +1,6 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import { genderList, user, userPermission } from "@/lib/select-option";
 import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
 import { faEye, faEyeSlash } from "@fortawesome/pro-light-svg-icons";
@@ -23,8 +25,8 @@ import Select from "react-select";
 import { boolean, mixed, object, string } from "yup";
 import countryData from "country-data";
 //const noto = Noto_Serif({ subsets: ["latin"] });
-import jwt from "jsonwebtoken";
 import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
+import { decodeJwtPayload, isJwtExpired } from "@/utils/jwtLite";
 
 const AdminUserMgmtEdit = (values, errors, id) => {
   const [selectedMenuItem, setSelectedMenuItem] = useState("Approved");
@@ -54,16 +56,13 @@ const AdminUserMgmtEdit = (values, errors, id) => {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if (userData && userData.accessToken) {
-      try{
-        const decoded = jwt.verify(
-          userData.accessToken,
-          process.env.NEXT_PUBLIC_ACCESS_KEY
-        );
-        setCreatorUser(decoded?.role);
-      }catch(err){
-        clearThirdWebAuthTokens()
-        window.location.href = "/sign-in"
+      const decoded = decodeJwtPayload(userData.accessToken);
+      if (!decoded || isJwtExpired(decoded)) {
+        clearThirdWebAuthTokens();
+        window.location.href = "/sign-in";
+        return;
       }
+      setCreatorUser(decoded?.role);
 
     }
     if (country) {
@@ -118,16 +117,13 @@ const AdminUserMgmtEdit = (values, errors, id) => {
     setLoading(true);
     const userData = JSON.parse(localStorage.getItem("user"));
     if (userData && userData.accessToken) {
-      try{
-        const decoded = jwt.verify(
-          userData.accessToken,
-          process.env.NEXT_PUBLIC_ACCESS_KEY
-        );
-        setCreatorUser(decoded?.role);
-      }catch(err){
-        clearThirdWebAuthTokens()
-        window.location.href = "/sign-in"
+      const decoded = decodeJwtPayload(userData.accessToken);
+      if (!decoded || isJwtExpired(decoded)) {
+        clearThirdWebAuthTokens();
+        window.location.href = "/sign-in";
+        return;
       }
+      setCreatorUser(decoded?.role);
 
     }
     const options = {

@@ -1,7 +1,10 @@
-import Faq from "@/components/Faq";
+import dynamic from "next/dynamic";
 //import { Noto_Serif } from "next/font/google";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Faq = dynamic(() => import("@/components/Faq"), { ssr: false });
 import {
   faAngleDown,
   faAngleRight,
@@ -31,24 +34,19 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Menu, Transition, Dialog } from "@headlessui/react";
 import Image from "next/image";
 import Link from "next/link";
-import Popover from "@/components/Mypopover";
 
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
-import {
-  BrowserRouter as Router,
-  Route,
-  useLocation,
-  useParams,
-} from "react-router-dom";
 import { RWebShare } from "react-web-share";
 import { getAllCategory, getAllPostsForHome } from "@/lib/api";
 import { format, parseISO } from "date-fns";
-import StarRating from "@/components/StarRating";
 import { Formik, Form, Field } from "formik";
-import RatingComponent from "@/components/RatingComponent";
+
+const Popover = dynamic(() => import("@/components/Mypopover"), { ssr: false });
+const StarRating = dynamic(() => import("@/components/StarRating"), { ssr: false });
+const RatingComponent = dynamic(() => import("@/components/RatingComponent"), { ssr: false });
 import Head from "next/head";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -78,7 +76,6 @@ export default function Product_Detailed({
   const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   const [sellerProducts, setSellerProducts] = useState(null);
-  const params = useParams();
   const router = useRouter();
   const [productCategory, setProductCategory] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);

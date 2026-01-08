@@ -1,5 +1,7 @@
-import ConfirmModal from "@/components/ConfirmModal";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const ConfirmModal = dynamic(() => import("@/components/ConfirmModal"), { ssr: false });
 import { faAngleLeft, faAngleRight } from "@fortawesome/pro-light-svg-icons";
 import { faAngleDown } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

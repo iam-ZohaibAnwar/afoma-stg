@@ -6,12 +6,26 @@ const Auth = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (userData) {
-      setIsLoggedIn(true);
-      setIsLoading(false);
+    // Non-blocking localStorage check
+    const checkAuth = () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem("user"));
+        setIsLoggedIn(!!userData);
+      } catch (error) {
+        setIsLoggedIn(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Use requestIdleCallback to avoid blocking initial render
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(checkAuth, { timeout: 50 });
+      } else {
+        setTimeout(checkAuth, 0);
+      }
     } else {
-      setIsLoggedIn(false);
       setIsLoading(false);
     }
   }, []);

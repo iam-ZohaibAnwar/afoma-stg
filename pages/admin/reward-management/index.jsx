@@ -1,9 +1,11 @@
-import AddBuyerRewardModal from "@/components/AddBuyerRewardModal";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import Head from "next/head";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import AddSellerRewardModal from "@/components/AddSellerRewardModal";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const AddBuyerRewardModal = dynamic(() => import("@/components/AddBuyerRewardModal"), { ssr: false });
+const AddSellerRewardModal = dynamic(() => import("@/components/AddSellerRewardModal"), { ssr: false });
 import { useRef } from "react";
 import toast from "react-hot-toast";
 import Select from "react-select";

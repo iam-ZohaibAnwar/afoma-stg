@@ -1,6 +1,8 @@
-import GenerateAiHarmonizedCode from "@/components/GenerateAiHarmonizedCode";
-import GenerateMetaTags from "@/components/GenerateMetaTags";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const GenerateAiHarmonizedCode = dynamic(() => import("@/components/GenerateAiHarmonizedCode"), { ssr: false });
+const GenerateMetaTags = dynamic(() => import("@/components/GenerateMetaTags"), { ssr: false });
 import { faCircleVideo, faImage } from "@fortawesome/pro-light-svg-icons";
 import { faAngleLeft } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

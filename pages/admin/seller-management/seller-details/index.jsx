@@ -1,5 +1,7 @@
-import AdminSellerDetail from "@/components/AdminSellerDetail";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const AdminSellerDetail = dynamic(() => import("@/components/AdminSellerDetail"), { ssr: false });
 import { faAngleLeft, faTrashCan } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Menu, Transition } from "@headlessui/react";

@@ -7,9 +7,11 @@ import React, { useEffect, useState } from "react";
 import { faCircleInfo } from "@fortawesome/pro-light-svg-icons";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import Select from "react-select";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
-import Comingsoon from "@/components/Comingsoon";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const Comingsoon = dynamic(() => import("@/components/Comingsoon"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

@@ -1,4 +1,4 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import { faAngleLeft, faCircleInfo } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Menu, Transition } from "@headlessui/react";
@@ -9,7 +9,8 @@ import { Fragment, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { object, string } from "yup";
 
-import AdminSellerDetail from "@/components/AdminSellerDetail";
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const AdminSellerDetail = dynamic(() => import("@/components/AdminSellerDetail"), { ssr: false });
 //import { Noto_Serif } from "next/font/google";
 import Head from "next/head";
 //const noto = Noto_Serif({ subsets: ["latin"] });

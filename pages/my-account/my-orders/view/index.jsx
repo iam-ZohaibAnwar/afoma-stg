@@ -1,7 +1,10 @@
-import ConfirmModal from "@/components/ConfirmModal";
-import Header from "@/components/Header";
-import MyAccountSidebar from "@/components/MyAccountSidebar";
-import ReviewModal from "@/components/ReviewModal";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const MyAccountSidebar = dynamic(() => import("@/components/MyAccountSidebar"), { ssr: false });
+const ConfirmModal = dynamic(() => import("@/components/ConfirmModal"), { ssr: false });
+const ReviewModal = dynamic(() => import("@/components/ReviewModal"), { ssr: false });
 import {
   calculateItemPrice,
   calculateItemTotalPrice,

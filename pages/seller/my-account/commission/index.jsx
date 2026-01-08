@@ -1,4 +1,6 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import axios from "axios";
 import Head from "next/head";
 import Image from "next/image";

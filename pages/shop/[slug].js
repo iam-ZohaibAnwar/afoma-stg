@@ -1,5 +1,8 @@
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
 import { calculateSurcharge } from "@/utils/pricingUtils";
 import { faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCheck } from "@fortawesome/pro-regular-svg-icons";
@@ -11,7 +14,7 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
@@ -43,14 +46,20 @@ const SellerInfoPage = ({ cart, sellerInfo, addToCart }) => {
   const [visibleProducts, setVisibleProducts] = useState(12);
   const [shopPause, setShopPause] = useState(false);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     setVisibleProducts((prev) => prev + 12);
-  };
+  }, []);
+  
   const router = useRouter();
-
   const slug = router.query.slug;
 
-  const getSellerInfo = () => {
+  // Memoize visible products
+  const displayedProducts = useMemo(() => 
+    allProducts ? allProducts.slice(0, visibleProducts) : [],
+    [allProducts, visibleProducts]
+  );
+
+  const getSellerInfo = useCallback(() => {
     setLoading(true);
     const options = {
       method: "GET",
@@ -88,82 +97,78 @@ const SellerInfoPage = ({ cart, sellerInfo, addToCart }) => {
         setError(true);
         setLoading(false);
       });
-  };
+  }, [slug]);
 
-  const getProductsBySellerId = (sellerId) => {
-    const productsOptions = {
-      method: "GET",
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/products/by/${sellerId}`,
-    };
+  const getProductsBySellerId = useCallback((sellerId) => {
+    if (!sellerId) return;
+    
+    const axiosInstance = axios.create({
+      headers: {
+        "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+      },
+    });
 
-    axios
-      .create({
-        headers: {
-          "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-        },
-      })
-      .request(productsOptions)
+    axiosInstance
+      .get(`${process.env.NEXT_PUBLIC_BASE_URL}/products/by/${sellerId}`)
       .then(function (response) {
-        const approvedProducts = response.data.filter(
+        const approvedProducts = response.data?.filter(
           (product) => product.productStatus === "Approved" && product.status == 1
-        );
-        const updatedProducts = calculateSurcharge(approvedProducts)
+        ) || [];
+        const updatedProducts = calculateSurcharge(approvedProducts);
         setAllProducts(updatedProducts);
       })
       .catch(function (error) {
         console.error(`Error fetching products for Seller ${sellerId}:`, error);
       });
-  };
+  }, []);
 
-  const getReviewsBySellerId = (sellerId) => {
-    const reviewsOptions = {
-      method: "GET",
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/reviews/seller/${sellerId}`,
-    };
+  const getReviewsBySellerId = useCallback((sellerId) => {
+    if (!sellerId) return;
+    
+    const axiosInstance = axios.create({
+      headers: {
+        "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+      },
+    });
 
-    axios
-      .create({
-        headers: {
-          "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-        },
-      })
-      .request(reviewsOptions)
+    axiosInstance
+      .get(`${process.env.NEXT_PUBLIC_BASE_URL}/reviews/seller/${sellerId}`)
       .then(function (response) {
-        const reviewsData = response.data.data
+        const reviewsData = response.data?.data;
         if (reviewsData?.length) {
           setReviews(reviewsData);
           
           // Calculate the average rating
-          const totalRating = reviewsData?.reduce((sum, review) => sum + review.avgRating, 0);
+          const totalRating = reviewsData.reduce((sum, review) => sum + (review.avgRating || 0), 0);
           const avgRating = totalRating / reviewsData.length;
           setAverageRating(avgRating);
         } else {
           setReviews([]);
           setAverageRating(0);
-          setCurrentPageReview(0)
-
+          setCurrentPageReview(0);
         }
       })
       .catch(function (error) {
-        console.error(`Error fetching products for Seller ${sellerId}:`, error);
+        console.error(`Error fetching reviews for Seller ${sellerId}:`, error);
       });
-  };
+  }, []);
 
-  const formatPrice = (price) => {
+  const formatPrice = useCallback((price) => {
     const numericPrice = Number(price); // Ensure it's a number
     return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
-  };
+  }, []);
 
-  const applySurcharge = (approvedProducts) => {
-    let userInfo = JSON.parse(localStorage.getItem("userInfo")) || {}
-    let userCurrency = (userInfo?.currency && userInfo.currencyRate) ? userInfo?.currency : false
-    if (userInfo.country) setUserCountry(userInfo.country)
-    setUserCurrency(userCurrency)
-    approvedProducts = calculateSurcharge(approvedProducts)
-  }
+  const applySurcharge = useCallback((approvedProducts) => {
+    if (typeof window === 'undefined') return;
+    let userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    let userCurrency = (userInfo?.currency && userInfo.currencyRate) ? userInfo?.currency : false;
+    if (userInfo.country) setUserCountry(userInfo.country);
+    setUserCurrency(userCurrency);
+    return calculateSurcharge(approvedProducts);
+  }, []);
   // References for sections
   const productsRef = useRef(null);
   const reviewsRef = useRef(null);
@@ -171,83 +176,97 @@ const SellerInfoPage = ({ cart, sellerInfo, addToCart }) => {
 
   const headerHeight = 80; // Adjust this based on your sticky header height
 
+  // Memoize scroll handler
+  const handleScroll = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const productSection = productsRef.current?.getBoundingClientRect();
+    const reviewSection = reviewsRef.current?.getBoundingClientRect();
+
+    if (productSection && productSection.bottom <= headerHeight + 50) {
+      setActiveTab("reviews");
+    } else if (reviewSection && reviewSection.bottom <= headerHeight + 50) {
+      setActiveTab("about");
+    } else if (productSection && productSection.top > headerHeight) {
+      setActiveTab("products");
+    }
+  }, [headerHeight]);
+
   useEffect(() => {
-    let userInfo = JSON.parse(localStorage.getItem("userInfo")) || {}
-    setUserCountry(userInfo.country)
-    setUserCurrency(userInfo?.currency)
-    const handleScroll = () => {
-      const productSection = productsRef.current?.getBoundingClientRect();
-      const reviewSection = reviewsRef.current?.getBoundingClientRect();
-      const aboutSection = aboutRef.current?.getBoundingClientRect();
-
-      if (productSection && productSection.bottom <= headerHeight + 50) {
-        setActiveTab("reviews");
-      }
-      if (reviewSection && reviewSection.bottom <= headerHeight + 50) {
-        setActiveTab("about");
-      }
-      if (productSection && productSection.top > headerHeight) {
-        setActiveTab("products");
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
+    if (typeof window === 'undefined') return;
+    let userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    setUserCountry(userInfo.country);
+    setUserCurrency(userInfo?.currency);
+    
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [handleScroll]);
 
   // Scroll function with offset
-  const scrollToSection = (sectionRef) => {
-    if (sectionRef.current) {
-      const yOffset = -headerHeight - 10; // Adjust to ensure section is fully visible
-      const y = sectionRef.current.getBoundingClientRect().top + window.scrollY + yOffset;
-
-      window.scrollTo({ top: y, behavior: "smooth" });
-    }
-  };
-
+  const scrollToSection = useCallback((sectionRef) => {
+    if (typeof window === 'undefined' || !sectionRef.current) return;
+    const yOffset = -headerHeight - 10; // Adjust to ensure section is fully visible
+    const y = sectionRef.current.getBoundingClientRect().top + window.scrollY + yOffset;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  }, [headerHeight]);
 
   useEffect(() => {
     if (slug) {
       getSellerInfo();
     }
-  }, [slug]);
+  }, [slug, getSellerInfo]);
 
-  const truncateText = (text, charLimit) => {
-    if (text.length > charLimit) {
-      return text.substring(0, charLimit) + "...";
+  const truncateText = useCallback((text, charLimit) => {
+    if (!text || text.length <= charLimit) return text;
+    return text.substring(0, charLimit) + "...";
+  }, []);
+
+  // Memoize current URL
+  const currentUrl = useMemo(() => 
+    `${process.env.NEXT_PUBLIC_URL}${router.asPath}`,
+    [router.asPath]
+  );
+
+  const handleCopyLinkClick = useCallback(() => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(currentUrl);
+      toast.success("Link copied to clipboard!");
     }
-    return text;
-  };
+  }, [currentUrl]);
 
-  const handleCopyLinkClick = () => {
-    navigator.clipboard.writeText(currentUrl);
-    toast.success("Link copied to clipboard!");
-  };
-
-  const currentUrl = `${process.env.NEXT_PUBLIC_URL}${router.asPath}`;
-
-  const imageUrl =
+  // Memoize image URL
+  const imageUrl = useMemo(() =>
     sellerInfo && sellerInfo.storeLogo
       ? sellerInfo.storeLogo
-      : `${process.env.NEXT_PUBLIC_URL}/default-seller-banner.jpg`;
+      : `${process.env.NEXT_PUBLIC_URL}/default-seller-banner.jpg`,
+    [sellerInfo?.storeLogo]
+  );
 
-  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Check out this store: ${sellerInfo ? sellerInfo?.storeTitle : ""
-    } ${currentUrl}`
-  )}`;
+  // Memoize share URLs
+  const whatsappShareUrl = useMemo(() => 
+    `https://wa.me/?text=${encodeURIComponent(
+      `Check out this store: ${sellerInfo ? sellerInfo?.storeTitle : ""} ${currentUrl}`
+    )}`,
+    [sellerInfo?.storeTitle, currentUrl]
+  );
 
 
 
   const productsPerPage = 12;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Calculate start and end indices for the products to display
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = allProducts?.slice(indexOfFirstProduct, indexOfLastProduct);
+  // Memoize pagination calculations
+  const { indexOfFirstProduct, indexOfLastProduct, totalPages } = useMemo(() => {
+    const indexOfLastProduct = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const totalPages = Math.ceil((allProducts?.length || 0) / productsPerPage);
+    return { indexOfFirstProduct, indexOfLastProduct, totalPages };
+  }, [currentPage, productsPerPage, allProducts?.length]);
 
-  // Calculate total pages
-  const totalPages = Math.ceil(allProducts?.length / productsPerPage);
+  // Memoize paginated products
+  const currentProducts = useMemo(() => {
+    if (!allProducts) return [];
+    return allProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  }, [allProducts, indexOfFirstProduct, indexOfLastProduct]);
 
   // Handle page change
   const handlePageChange = (pageNumber) => {
@@ -500,10 +519,14 @@ const SellerInfoPage = ({ cart, sellerInfo, addToCart }) => {
                                 <div>
                                   <div className="w-[320px] h-[320px] max-w-[320px] max-h-[320px] relative overflow-visible group bg-white border border-slate-200 rounded">
                                     <div className="absolute inset-0 bg-yellow-950/[55%] opacity-0 group-hover:opacity-100 transition-opacity rounded"></div>
-                                    <img
-                                      src={data?.images[0]?.imageUrl}
-                                      alt={data?.images[0]?.altText}
-                                      className="h-full w-full rounded"
+                                    <Image
+                                      src={data?.images[0]?.imageUrl || "/placeholder.jpg"}
+                                      alt={data?.images[0]?.altText || "Product image"}
+                                      width={320}
+                                      height={320}
+                                      className="h-full w-full rounded object-cover"
+                                      loading="lazy"
+                                      sizes="(max-width: 768px) 320px, 320px"
                                     />
                                     <div className="absolute bg-orange-50 w-8 h-8 rounded-full right-5 top-5 flex items-center justify-center">
                                       <button

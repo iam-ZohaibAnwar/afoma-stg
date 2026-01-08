@@ -1,6 +1,9 @@
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import MyAccountSidebar from "@/components/MyAccountSidebar";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const MyAccountSidebar = dynamic(() => import("@/components/MyAccountSidebar"), { ssr: false });
 import { faAngleRight } from "@fortawesome/pro-light-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
@@ -9,7 +12,8 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import jwt from "jsonwebtoken";
+import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
+import { decodeJwtPayload, isJwtExpired } from "@/utils/jwtLite";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 
@@ -27,13 +31,13 @@ const Downloads = ({ cart, addToCart }) => {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if(userData && userData.accessToken){
-      try{
-        const decoded = jwt.verify(userData.accessToken, process.env.NEXT_PUBLIC_ACCESS_KEY);
-        userData.userRole = decoded.role
-      }catch(err){
-        clearThirdWebAuthTokens()
-        window.location.href = "/sign-in"
+      const decoded = decodeJwtPayload(userData.accessToken);
+      if (!decoded || isJwtExpired(decoded)) {
+        clearThirdWebAuthTokens();
+        window.location.href = "/sign-in";
+        return;
       }
+      userData.userRole = decoded.role
 
     }
     if (userData?.userRole === "customer") {

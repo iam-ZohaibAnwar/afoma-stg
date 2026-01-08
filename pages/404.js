@@ -1,5 +1,4 @@
-import Footer2 from "@/components/Footer2";
-import Header from "@/components/Header";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 //import { Noto_Serif } from "next/font/google";
@@ -9,7 +8,11 @@ import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import Head from "next/head";
-import Footer from "@/components/Footer";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

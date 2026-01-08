@@ -1,6 +1,9 @@
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import ProductCardComponent from "@/components/ProductCard";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const ProductCardComponent = dynamic(() => import("@/components/ProductCard"), { ssr: false });
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";

@@ -1,4 +1,7 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import {
   faBagShopping,
   faChartColumn,

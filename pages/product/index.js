@@ -1,8 +1,20 @@
-import Faq from "@/components/Faq";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import ProductCardComponent from "@/components/ProductCard";
-import StarRating from "@/components/StarRating";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Faq = dynamic(() => import("@/components/Faq"), { ssr: false });
+const ProductCardComponent = dynamic(() => import("@/components/ProductCard"), { ssr: false });
+const StarRating = dynamic(() => import("@/components/StarRating"), { ssr: false });
+
+// Lazy load Slider
+const Slider = dynamic(() => {
+  if (typeof window !== "undefined") {
+    require("slick-carousel/slick/slick.css");
+    require("slick-carousel/slick/slick-theme.css");
+  }
+  return import("react-slick");
+}, { ssr: false });
 import {
   faArrowLeft,
   faArrowRight,
@@ -31,9 +43,6 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

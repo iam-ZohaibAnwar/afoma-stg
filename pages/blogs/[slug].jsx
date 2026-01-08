@@ -1,6 +1,4 @@
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import Waitlist from "@/components/Waitlist";
+import dynamic from "next/dynamic";
 import { format, parseISO } from "date-fns";
 import ErrorPage from "next/error";
 //import { Noto_Serif } from "next/font/google";
@@ -9,6 +7,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { getAllPostsWithSlug, getPostAndMorePosts } from "../../lib/api";
+
+// Lazy load heavy components
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const Waitlist = dynamic(() => import("@/components/Waitlist"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 

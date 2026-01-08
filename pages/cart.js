@@ -29,14 +29,10 @@ import { useCart } from "@/context/CartProvider";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 
-const Cart = ({
-
-  setCart,
-  clearCart,
-  setSubTotal,
-  saveCart,
-}) => {
-  const {cart, addToCart, removeFromCart, deleteFromCart, subTotal, totalShippingRate, fetchedShippingRate, userInfoStored} = useCart();
+const Cart = ({}) => {
+  const {cart, setCart, addToCart, removeFromCart, deleteFromCart, subTotal, totalShippingRate, fetchedShippingRate, userInfoStored} = useCart();
+  console.log("cart page cart", cart)
+  console.log("cart page userInfoStored", subTotal, totalShippingRate, fetchedShippingRate, )
   const [loading, setLoading] = useState(true);
   const [rateOptionsError, setRateOptionsError] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -439,7 +435,12 @@ const Cart = ({
       cartUpdatedInternally.current = false;
       return; // don't call fetchData
     }
-    fetchData()
+
+    // Only call fetchData if cart actually changed externally
+    if (Object.keys(cart).length > 0) {
+      fetchData();
+    }
+
     const coupon = JSON.parse(localStorage.getItem("applyCoupon"))
     if(coupon) applyCode({code: coupon.couponCode})
     localStorage.removeItem("applyCoupon")
@@ -540,10 +541,10 @@ const Cart = ({
           let updatedCart = updateOrderData(response.data.updatedOrder.clonedCart);
           const subTotal = localStorage.getItem("subTotal")
           localStorage.setItem("oldSubTotal", subTotal)
-          cartUpdatedInternally.current = false;
+          cartUpdatedInternally.current = true;
           localStorage.setItem("cart", JSON.stringify(updatedCart));
           setCart(updatedCart);
-          cartUpdatedInternally.current = false;
+          cartUpdatedInternally.current = true;
           localStorage.setItem(
             "appliedCoupon",
             JSON.stringify(response.data.updatedOrder.coupon)
@@ -1341,6 +1342,7 @@ const Cart = ({
                                                             })
                                                         }
                                                         onChange={(selected) => {
+                                                          cartUpdatedInternally.current = true;
                                                           const selectedShipping =
                                                             groupCartItem.shippingOptions?.find(
                                                               (option) =>
@@ -1705,7 +1707,7 @@ const Cart = ({
                                   ? userInfoStored?.currency
                                   : "CA$"
                                 } 
-                        ${formatPrice(
+                                ${formatPrice(
                                   parseFloat(totalShippingRate).toFixed(2)
                                 )}`
                                 : "-"}
@@ -1736,7 +1738,7 @@ const Cart = ({
                                   ) +
                                   parseFloat(
                                     (userInfoStored?.currencyRate
-                                      ? subTotal * userInfoStored?.currencyRate
+                                      ? (subTotal * 0.03 + 0.3) * userInfoStored?.currencyRate
                                       : subTotal * 0.03
                                     ).toFixed(2)
                                   )

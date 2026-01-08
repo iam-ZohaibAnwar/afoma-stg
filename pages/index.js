@@ -3,7 +3,7 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 
 import { getAllPostsForNewData } from "@/lib/api";
@@ -57,6 +57,8 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
   const router = useRouter();
 
   useEffect(() => {
+    if (images.length === 0 || mobileImages.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
       setCurrentImagMbeIndex(
@@ -64,7 +66,7 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
       );
     }, 5000);
     return () => clearInterval(interval); // Clean up the interval on component unmount
-  }, [images, mobileImages]);
+  }, [images.length, mobileImages.length]); // Only depend on length, not the arrays themselves
 
   const [favShops, setFavShops] = useState([]);
   const [userCurrency, setUserCurrency] = useState("");
@@ -115,11 +117,12 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
     }));
   }, [categoryData]);
 
-  const getSellerInfo = async () => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    const id= userData?.sellerId
-    if (!id) return;
+  const getSellerInfo = useCallback(async () => {
     try {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const id = userData?.sellerId;
+      if (!id) return;
+      
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_BASE_URL}/sellers/${id}`,
         {
@@ -132,139 +135,128 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
 
       // Check profileSetup
       const profileSetup = response.data?.profileSetup;
-      if (
-        profileSetup &&
+      const isComplete = profileSetup &&
         profileSetup.basicInfo === true &&
         profileSetup.sellerDetails === true &&
         profileSetup.sellerPolicies === true &&
         profileSetup.shippingConfig === true &&
-        profileSetup.paymentInfo === true
-      ) {
-        setShowProfileIncompleteModal(false); // Profile is complete
-      } else {
-        setShowProfileIncompleteModal(true); // Show modal
-      }
+        profileSetup.paymentInfo === true;
+      
+      setShowProfileIncompleteModal(!isComplete);
     } catch (error) {
       console.error("Error fetching seller info:", error);
       setSellerInfo(null);
     }
-  };
+  }, []);
 
 
 
 
-  const getSettingsAndDetails = async () => {
-    setLoading(true);
-    const userData = JSON.parse(localStorage.getItem("user"));
-    let content = {};
-    const options = {
-      method: "GET",
-      url: `${process.env.NEXT_PUBLIC_BASE_URL}/settings/all/types`,
-    };
-
-    axios
-      .create({
+  const getSettingsAndDetails = useCallback(async () => {
+    // Non-blocking fetch - doesn't prevent route changes
+    try {
+      const axiosInstance = axios.create({
         headers: {
           "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
         },
-      })
-      .request(options)
-      .then(function (response) {
-        setLoading(false);
-        if (response?.data?.settings?.length) {
-          for (let setting of response.data.settings) {
-            try {
-              content = JSON.parse(setting.content);
-            } catch (error) {
-              content = setting.content;
-            }
-            if (setting?.type == "upload-single-image" && content?.length) {
-              setBanner(content[0]);
-            } else if (setting?.type == "upload-images" && content?.length) {
-              // setImages([...images,...content.map(item=>item.imageUrl)])
-              // setMobileImages([...mobileImages,...content.map(item=>item.imageUrl)])
-              setImages(content.map((item) => item.imageUrl));
-              setMobileImages(content.map((item) => item.imageUrl));
-            } else if (setting?.type == "shops" && content?.length) {
-              const ids = content.map((seller) => seller?.id);
-              const options2 = {
-                method: "POST",
-                url: `${process.env.NEXT_PUBLIC_BASE_URL}/sellers/sellerByIds`,
-                data: { ids },
-              };
-              axios
-                .create({
-                  headers: {
-                    "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-                  },
-                })
-                .request(options2)
-                .then(function (response) {
-                  setLoading(false);
-                  if (response.data) {
-                    setFavShops(response.data);
-                  }
-                })
-                .catch(function (error) {
-                  setLoading(false);
-                });
-            }
+        timeout: 5000, // Fast timeout
+      });
+
+      const response = await axiosInstance.get(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/settings/all/types`
+      );
+
+      if (response?.data?.settings?.length) {
+        const shopIds = [];
+        
+        for (let setting of response.data.settings) {
+          let content = {};
+          try {
+            content = typeof setting.content === 'string' 
+              ? JSON.parse(setting.content) 
+              : setting.content;
+          } catch (error) {
+            content = setting.content;
+          }
+
+          if (setting?.type === "upload-single-image" && content?.length) {
+            setBanner(content[0]);
+          } else if (setting?.type === "upload-images" && content?.length) {
+            setImages(content.map((item) => item.imageUrl));
+            setMobileImages(content.map((item) => item.imageUrl));
+          } else if (setting?.type === "shops" && content?.length) {
+            shopIds.push(...content.map((seller) => seller?.id));
           }
         }
-      })
-      .catch(function (error) {
-        console.error("Error:", error);
-        setLoading(false);
-      });
-  };
+
+        // Fetch shops in a single batch request
+        if (shopIds.length > 0) {
+          const shopsResponse = await axiosInstance.post(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/sellers/sellerByIds`,
+            { ids: shopIds }
+          );
+          if (shopsResponse.data) {
+            setFavShops(shopsResponse.data);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    }
+    // Removed setLoading - non-blocking
+  }, []);
 
   useEffect(() => {
-    let userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+    if (typeof window === 'undefined') return;
+    let userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
     let userCurrency =
       userInfo?.currency && userInfo.currencyRate ? userInfo?.currency : false;
     setUserCurrency(userCurrency);
     setUserCountry(userInfo?.country);
     getSellerInfo();
-    getSettingsAndDetails();
-  }, []);
+    // Defer non-critical data fetching - allows instant route changes
+    setTimeout(() => {
+      getSettingsAndDetails();
+    }, 0);
+  }, [getSellerInfo, getSettingsAndDetails]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/subscription`,
-      {
-        body: JSON.stringify({
-          email: email,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
-        },
-        method: "POST",
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/subscription`,
+        {
+          body: JSON.stringify({
+            email: email,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": "gCV_WZOz9nIa8QwTyEFvccQmIK94Ufxm",
+          },
+          method: "POST",
+        }
+      );
+
+      const { error } = await res.json();
+
+      if (error) {
+        setShowSuccessMessage(false);
+        setShowFailureMessage(true);
+        setEmail("");
+      } else if (res.status === 200) {
+        setShowSuccessMessage(true);
+        setShowFailureMessage(false);
+        setEmail("");
       }
-    );
-
-    const { error } = await res.json();
-
-    if (error) {
-      // //
+    } catch (error) {
+      console.error("Subscription error:", error);
       setShowSuccessMessage(false);
       setShowFailureMessage(true);
-
-      setEmail("");
+    } finally {
       setLoading(false);
     }
-
-    if (res.status === 200) {
-      //
-      setShowSuccessMessage(true);
-      setShowFailureMessage(false);
-      // Reset form fields
-      setEmail("");
-      setLoading(false);
-    }
-  };
+  }, [email]);
 
   const currentUrl = `${process.env.NEXT_PUBLIC_URL}${router.asPath}`;
   const jsonLd1 = {
@@ -413,11 +405,11 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
 
   const scrollContainerRef = useRef(null);
 
-  // Function to handle scrolling
-  const scroll = (direction) => {
+  // Memoized scroll functions to prevent unnecessary re-renders
+  const scroll = useCallback((direction) => {
     if (scrollContainerRef.current) {
       // Get the width of a single card (adjust as needed if dynamic width)
-      const cardWidth = scrollContainerRef.current.children[0].offsetWidth + 6; // 6px for the space-x-6 margin
+      const cardWidth = scrollContainerRef.current.children[0]?.offsetWidth + 6 || 300; // 6px for the space-x-6 margin
 
       // Calculate the scroll amount (one card at a time)
       const scrollAmount = direction === "right" ? cardWidth : -cardWidth;
@@ -428,16 +420,16 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
         behavior: "smooth", // This ensures smooth scrolling
       });
     }
-  };
+  }, []);
 
   const scrollReviewContainerRef = useRef(null);
 
-  // Function to handle scrolling
-  const scrollReview = (direction) => {
+  // Memoized scroll function for reviews
+  const scrollReview = useCallback((direction) => {
     if (scrollReviewContainerRef.current) {
       // Get the width of a single card (adjust as needed if dynamic width)
       const cardWidth =
-        scrollReviewContainerRef.current.children[0].offsetWidth + 6; // 6px for the space-x-6 margin
+        scrollReviewContainerRef.current.children[0]?.offsetWidth + 6 || 300; // 6px for the space-x-6 margin
 
       // Calculate the scroll amount (one card at a time)
       const scrollAmount = direction === "right" ? cardWidth : -cardWidth;
@@ -448,16 +440,16 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
         behavior: "smooth", // This ensures smooth scrolling
       });
     }
-  };
+  }, []);
 
   const scrollNewArrivalContainerRef = useRef(null);
 
-  // Function to handle scrolling
-  const scrollNewArrival = (direction) => {
+  // Memoized scroll function for new arrivals
+  const scrollNewArrival = useCallback((direction) => {
     if (scrollNewArrivalContainerRef.current) {
       // Get the width of a single card (adjust as needed if dynamic width)
       const cardWidth =
-        scrollNewArrivalContainerRef.current.children[0].offsetWidth + 6; // 6px for the space-x-6 margin
+        scrollNewArrivalContainerRef.current.children[0]?.offsetWidth + 6 || 300; // 6px for the space-x-6 margin
 
       // Calculate the scroll amount (one card at a time)
       const scrollAmount = direction === "right" ? cardWidth : -cardWidth;
@@ -468,7 +460,7 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
         behavior: "smooth", // This ensures smooth scrolling
       });
     }
-  };
+  }, []);
 
   return (
     <>
@@ -557,17 +549,27 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
           }}
           className="cursor-pointer"
         >
-          <img
-            key={`${images[currentImageIndex]}-${Date.now()}-desk`}
-            src={images[currentImageIndex]}
+          <Image
+            key={`${images[currentImageIndex]}-${currentImageIndex}-desk`}
+            src={images[currentImageIndex] || '/placeholder.jpg'}
+            width={1920}
+            height={700}
             className="w-full lg:min-h-[300px] lg:max-h-[700px] md:block hidden transition-opacity ease-in-out animate-fade object-cover"
             alt="Hero Banner"
+            priority={currentImageIndex === 0}
+            loading={currentImageIndex === 0 ? "eager" : "lazy"}
+            sizes="100vw"
           />
-          <img
-            key={`${images[currentImageMbIndex]}-${Date.now()}-mob`}
-            src={mobileImages[currentImageMbIndex]}
+          <Image
+            key={`${mobileImages[currentImageMbIndex]}-${currentImageMbIndex}-mob`}
+            src={mobileImages[currentImageMbIndex] || '/placeholder.jpg'}
+            width={768}
+            height={700}
             className="w-full lg:min-h-[300px] lg:max-h-[700px] md:hidden flex transition-opacity ease-in-out animate-fade object-cover"
             alt="Hero Banner"
+            priority={currentImageMbIndex === 0}
+            loading={currentImageMbIndex === 0 ? "eager" : "lazy"}
+            sizes="100vw"
           />
         </div>
         <div className="max-w-screen-xl mx-auto px-4 py-8 md:pt-10 md:pb-12">
@@ -1010,13 +1012,15 @@ export default function Index({ allPosts, categoryPosts, cart, addToCart }) {
 
       {banner?.imageUrl && (
         <section className="bg-white overflow-hidden">
-          <div className="container mx-auto p-5 ">
-            <img
+          <div className="container mx-auto p-5 relative w-full h-auto">
+            <Image
               src={banner?.imageUrl || ""}
-              alt={banner?.fileName || ""}
-              layout="fill"
-              objectFit="contain"
-              className=""
+              alt={banner?.fileName || "Banner"}
+              width={1200}
+              height={400}
+              className="w-full h-auto object-contain"
+              loading="lazy"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
             />
           </div>
         </section>

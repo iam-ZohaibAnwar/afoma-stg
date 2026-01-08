@@ -20,7 +20,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
 import { faBagsShopping, faGiftCard, faTrophyStar, } from "@fortawesome/pro-regular-svg-icons";
-import jwt from "jsonwebtoken";
+import { decodeJwtPayload, isJwtExpired } from "@/utils/jwtLite";
 import { faShippingFast, faTrophy, faWallet } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import { useSidebar } from "@/context/sidebarContext";
@@ -91,16 +91,13 @@ const AdminProductSidebar = ({ }) => {
     localStorage.setItem("sidebar-expanded", sidebarExpanded.toString());
     const userData = JSON.parse(localStorage.getItem("user"));
     if (userData && userData.accessToken) {
-      try {
-        const decoded = jwt.verify(
-          userData.accessToken,
-          process.env.NEXT_PUBLIC_ACCESS_KEY
-        );
-        setfullAccess(decoded?.fullAccess);
-      } catch (err) {
+      const decoded = decodeJwtPayload(userData.accessToken);
+      if (!decoded || isJwtExpired(decoded)) {
         clearThirdWebAuthTokens();
         window.location.href = "/sign-in";
+        return;
       }
+      setfullAccess(decoded?.fullAccess);
     }
     if (sidebarExpanded) {
       document.querySelector("body")?.classList.add("sidebar-expanded");

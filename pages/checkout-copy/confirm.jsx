@@ -1,5 +1,7 @@
-import Footer2 from "@/components/Footer2";
-import Miniheader from "@/components/Miniheader";
+import dynamic from "next/dynamic";
+
+const Footer2 = dynamic(() => import("@/components/Footer2"), { ssr: false });
+const Miniheader = dynamic(() => import("@/components/Miniheader"), { ssr: false });
 import { faAngleRight, faCheck } from "@fortawesome/pro-light-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";

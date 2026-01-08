@@ -1,5 +1,7 @@
-import Comingsoon from "@/components/Comingsoon";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const Comingsoon = dynamic(() => import("@/components/Comingsoon"), { ssr: false });
 import Head from "next/head";
 import React from "react";
 

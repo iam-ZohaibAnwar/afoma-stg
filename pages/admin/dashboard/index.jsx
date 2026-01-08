@@ -1,5 +1,10 @@
-import ChartPieAdmin from "@/components/ChartPieAdmin";
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+
+// Lazy load heavy chart component
+const ChartPieAdmin = dynamic(() => import("@/components/ChartPieAdmin"), { ssr: false });
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import {
   faArrowTrendUp,
@@ -11,8 +16,8 @@ import axios from "axios";
 //import { Noto_Serif } from "next/font/google";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import jwt from "jsonwebtoken";
 import { clearThirdWebAuthTokens } from "@/lib/thirdweb-utils";
+import { decodeJwtPayload, isJwtExpired } from "@/utils/jwtLite";
 //const noto = Noto_Serif({ subsets: ["latin"] });
 const Index = () => {
   const [activeTab, setActiveTab] = useState("table1");
@@ -115,16 +120,16 @@ const Index = () => {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if(userData && userData.accessToken){
-      try{
-        const decoded = jwt.verify(userData.accessToken, process.env.NEXT_PUBLIC_ACCESS_KEY);
-        if(decoded.role == "admin" && decoded?.fullAccess){
-          TotalSell();
-        }else{
-          setTotalSell(0);
-        }
-      }catch(err){
-        clearThirdWebAuthTokens()
-        window.location.href = "/sign-in"
+      const decoded = decodeJwtPayload(userData.accessToken);
+      if (!decoded || isJwtExpired(decoded)) {
+        clearThirdWebAuthTokens();
+        window.location.href = "/sign-in";
+        return;
+      }
+      if(decoded.role == "admin" && decoded?.fullAccess){
+        TotalSell();
+      }else{
+        setTotalSell(0);
       }
     }
   }, []);
@@ -150,16 +155,16 @@ const Index = () => {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("user"));
     if(userData && userData.accessToken){
-      try{
-        const decoded = jwt.verify(userData.accessToken, process.env.NEXT_PUBLIC_ACCESS_KEY);
-        if(decoded.role == "admin" && decoded?.fullAccess){
-          // AverageValue();
-        }else{
-          setorderValue(0);
-        }
-      }catch(err){
-        clearThirdWebAuthTokens()
-        window.location.href = "/sign-in"
+      const decoded = decodeJwtPayload(userData.accessToken);
+      if (!decoded || isJwtExpired(decoded)) {
+        clearThirdWebAuthTokens();
+        window.location.href = "/sign-in";
+        return;
+      }
+      if(decoded.role == "admin" && decoded?.fullAccess){
+        // AverageValue();
+      }else{
+        setorderValue(0);
       }
 
     }

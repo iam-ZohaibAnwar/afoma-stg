@@ -1,8 +1,9 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
 import { genderList } from "@/lib/select-option";
 import axios from "axios";
 
-import SellerDetail from "@/components/SellerDetail";
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const SellerDetail = dynamic(() => import("@/components/SellerDetail"), { ssr: false });
 import { faPen } from "@fortawesome/pro-light-svg-icons";
 import { faAngleLeft } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

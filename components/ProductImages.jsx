@@ -1,12 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import Image from "next/image";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
+import dynamic from "next/dynamic";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlayCircle } from "@fortawesome/pro-regular-svg-icons";
 
-const ProductImages = ({
+// Lazy load Slider - CSS imports need to stay for styling
+const Slider = dynamic(() => {
+  if (typeof window !== "undefined") {
+    require("slick-carousel/slick/slick.css");
+    require("slick-carousel/slick/slick-theme.css");
+  }
+  return import("react-slick");
+}, { 
+  ssr: false,
+  loading: () => <div className="h-[285px] w-[285px] md:w-[380px] md:h-[380px] bg-gray-200 animate-pulse rounded" />
+});
+
+const ProductImages = memo(({
   product,
   selectedImage,
   setSelectedImage,
@@ -45,11 +55,15 @@ const ProductImages = ({
       <div className="hidden lg:flex gap-4 shrink-0 items-start flex-col h-[380px] overflow-auto scrollbar">
         {product?.images?.map((image, index) => (
           <div key={index}>
-            <img
+            <Image
               src={image.imageUrl}
               alt={image.altText || "product_image"}
+              width={76}
+              height={84}
               className="border-[1px] hover:border-primary h-[84px] w-[76px] rounded object-cover cursor-pointer"
               onClick={() => handleImageClick(image)}
+              loading="lazy"
+              unoptimized={image.imageUrl?.includes("http")}
             />
           </div>
         ))}
@@ -96,11 +110,15 @@ const ProductImages = ({
               <Slider {...settings} ref={sliderRef} className="sliderslick w-[285px] md:w-[380px] mx-auto">
                 {product?.images?.map((image, index) => (
                   <div key={index}>
-                    <img
+                    <Image
                       src={image.imageUrl}
                       alt={image.altText}
+                      width={380}
+                      height={380}
                       className="h-[285px] w-[285px] md:w-[380px] md:h-[380px] object-cover z-10 rounded cursor-pointer"
                       onClick={() => handleImageClick(image, true, index)}
+                      loading="lazy"
+                      unoptimized={image.imageUrl?.includes("http")}
                     />
                   </div>
                 ))}
@@ -129,9 +147,11 @@ const ProductImages = ({
             {/* Desktop Single Image */}
             <div className={`relative hidden w-[285px] h-[285px] md:w-[380px] md:h-[380px] z-0 lg:flex items-center justify-center`}>
               {selectedImage ? (
-                <img
+                <Image
                   src={selectedImage.imageUrl}
                   alt={selectedImage.altText || "product_image"}
+                  width={380}
+                  height={380}
                   className="w-full h-full object-cover cursor-pointer"
                   onClick={() => {
                     setSelectedImage(selectedImage);
@@ -143,6 +163,8 @@ const ProductImages = ({
                     );
                     setSelectedImageIndex(index);
                   }}
+                  loading="lazy"
+                  unoptimized={selectedImage.imageUrl?.includes("http")}
                 />
               ) : (
                 <p>Loading...</p>
@@ -153,6 +175,8 @@ const ProductImages = ({
       </div>
     </div>
   );
-};
+});
+
+ProductImages.displayName = "ProductImages";
 
 export default ProductImages;

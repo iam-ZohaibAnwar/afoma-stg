@@ -1,4 +1,6 @@
-import Layout from "@/components/Layout";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { faAngleLeft, faAngleRight } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

@@ -9,8 +9,10 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
-import Layout from "@/components/Layout";
-import ConfirmModal from "@/components/ConfirmModal";
+import dynamic from "next/dynamic";
+
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const ConfirmModal = dynamic(() => import("@/components/ConfirmModal"), { ssr: false });
 import toast from "react-hot-toast";
 
 //const noto = Noto_Serif({ subsets: ["latin"] });

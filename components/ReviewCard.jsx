@@ -1,10 +1,11 @@
 import { useRouter } from "next/router";
-import React from "react";
+import React, { memo, useCallback, useMemo } from "react";
+import Image from "next/image";
 
-const ReviewCard = ({ data, index }) => {
+const ReviewCard = memo(({ data, index }) => {
   const router = useRouter();
-  // Function to render stars based on rating
-  const renderStars = (rating) => {
+  // Memoized function to render stars based on rating
+  const renderStars = useCallback((rating) => {
     const fullStars = Math.floor(rating); // Full stars
     const halfStars = rating % 1 >= 0.5 ? 1 : 0; // Half star if rating has a decimal of .5 or more
     const emptyStars = 5 - fullStars - halfStars; // Empty stars to fill up to 5
@@ -12,9 +13,9 @@ const ReviewCard = ({ data, index }) => {
     return (
       <>
         {/* Full stars */}
-        {[...Array(fullStars)].map((_, index) => (
+        {[...Array(fullStars)].map((_, idx) => (
           <svg
-            key={`full-${index}`}
+            key={`full-${idx}`}
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5 text-yellow-500"
             fill="currentColor"
@@ -48,9 +49,9 @@ const ReviewCard = ({ data, index }) => {
         )}
 
         {/* Empty stars */}
-        {[...Array(emptyStars)].map((_, index) => (
+        {[...Array(emptyStars)].map((_, idx) => (
           <svg
-            key={`empty-${index}`}
+            key={`empty-${idx}`}
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5 text-gray-300"
             fill="currentColor"
@@ -66,33 +67,41 @@ const ReviewCard = ({ data, index }) => {
         ))}
       </>
     );
-  };
+  }, []);
+
+  // Memoize computed values
+  const stars = useMemo(() => renderStars(data?.avgRating || 0), [data?.avgRating, renderStars]);
+  const reviewerName = useMemo(() => `${data?.UserId?.firstName || ''} ${data?.UserId?.lastName || ''}`, [data?.UserId?.firstName, data?.UserId?.lastName]);
+  const productName = useMemo(() => {
+    const name = data?.productId?.productName || '';
+    return name.length > 25 ? name.slice(0, 25) + "..." : name;
+  }, [data?.productId?.productName]);
+
+  const handleClick = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    let isMobile = window.innerWidth < 768;
+    let hashTarget = isMobile ? "#customerReviewsMobile" : "#customerReviews";
+    router.push(
+      `category/${data?.productId?.Category?.slug}/${data?.productId?.SubCategory?.slug}${
+        data?.productId?.childCategory?.slug ? "/" + data?.productId?.childCategory?.slug : ""
+      }/${data?.productId?.slug}${hashTarget}`
+    );
+  }, [data?.productId, router]);
 
   return (
     <div
-      onClick={() => {
-        let isMobile = window.innerWidth < 768;
-        let hashTarget = isMobile
-          ? "#customerReviewsMobile"
-          : "#customerReviews";
-        router.push(
-          `category/${data?.productId?.Category?.slug}/${
-            data?.productId?.SubCategory?.slug
-          }${
-            data?.productId?.childCategory?.slug
-              ? "/" + data?.productId?.childCategory?.slug
-              : ""
-          }/${data?.productId?.slug}${hashTarget}`
-        );
-      }}
+      onClick={handleClick}
       className="cursor-pointer lg:min-w-[600px] min-w-[400px] col-span-1 mx-auto my-8 bg-white shadow-lg rounded-lg h-[200px] lg:h-[300px] grid grid-cols-3 grid-rows-1 gap-4"
     >
       {/* Left: Image */}
-      <div className="col-span-1 h-full">
-        <img
-          src={data?.productId?.images?.[0]?.imageUrl || ""}
+      <div className="col-span-1 h-full relative">
+        <Image
+          src={data?.productId?.images?.[0]?.imageUrl || "/placeholder.jpg"}
           alt="Review image"
-          className="object-cover w-full h-full rounded-l-lg"
+          fill
+          className="object-cover rounded-l-lg"
+          loading="lazy"
+          sizes="(max-width: 768px) 133px, 200px"
         />
       </div>
 
@@ -101,14 +110,12 @@ const ReviewCard = ({ data, index }) => {
         <div className="px-2">
           {/* Stars */}
           <div className="flex mb-2">
-            {renderStars(data?.avgRating || 0)}{" "}
-            {/* Use the renderStars function */}
+            {stars}
           </div>
 
           {/* Reviewer name */}
-          <h3 className="lg:text-xl md:text-lg text-md font-bold text-gray-900">{`${data?.UserId?.firstName} ${data?.UserId?.lastName}`}</h3>
+          <h3 className="lg:text-xl md:text-lg text-md font-bold text-gray-900">{reviewerName}</h3>
           {/* Review text */}
-          {/* <p className="lg:text-md md:text-sm text-sm mt-2 text-gray-600">{data?.reviewText}</p> */}
           <p className="text-gray-600 mt-2 overflow-hidden text-ellipsis line-clamp-2 md:line-clamp-4">
             {data?.reviewText}
           </p>
@@ -116,16 +123,14 @@ const ReviewCard = ({ data, index }) => {
         <div className="px-5">
           {/* Product name */}
           <h3 className="lg:text-lg md:text-md text-sm font-semibold text-gray-700">
-            {data?.productId?.productName.length > 25
-              ? data?.productId?.productName.slice(0, 25) + "..."
-              : data?.productId?.productName}
+            {productName}
           </h3>
-          {/* Price */}
-          {/* <p className="lg:text-md md:text-sm text-sm mt-2 text-gray-600">{data?.productId?.variations?.length ? "$" + data?.productId?.variations?.[0]?.finalPrice : "$" + data?.productId?.totalPrice || "$" + data?.productId?.price}</p> */}
         </div>
       </div>
     </div>
   );
-};
+});
+
+ReviewCard.displayName = "ReviewCard";
 
 export default ReviewCard;

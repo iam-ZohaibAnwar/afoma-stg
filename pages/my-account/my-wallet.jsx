@@ -1,5 +1,8 @@
-import Layout from "@/components/Layout";
-import MyAccountSidebar from "@/components/MyAccountSidebar";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const Layout = dynamic(() => import("@/components/Layout"), { ssr: false });
+const MyAccountSidebar = dynamic(() => import("@/components/MyAccountSidebar"), { ssr: false });
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { faAngleLeft, faAngleRight } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,8 +13,8 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+const Header = dynamic(() => import("@/components/Header"), { ssr: true });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
 
 //const noto = Noto_Serif({ subsets: ["latin"] });
 
